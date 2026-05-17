@@ -1,0 +1,253 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:5000";
+// ─── Branch API ────────────────────────────────────────────────
+
+export interface OperationalHours {
+  [day: string]: {
+    open: string;
+    close: string;
+    isClosed: boolean;
+  };
+}
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+export interface Branch {
+  id: number;
+  name: string;
+  address: string;
+  contact: string;
+  operational_hours: OperationalHours;
+  time_slots: string[];
+  services: string[];
+  is_active: boolean;
+  created_at: string;
+  admin_count: number;
+}
+
+export interface BranchListResponse {
+  success: boolean;
+  data: {
+    branches: Branch[];
+    total_all: number;
+    total_shown: number;
+  };
+}
+
+export interface CreateBranchPayload {
+  branch_name: string;
+  branch_address: string;
+  branch_contact: string;
+  operational_hours: OperationalHours;
+  time_slots: string[];
+  services: string[];
+  admin_email: string;
+  admin_password: string;
+  admin_phone: string;
+  admin_role: "pusat" | "cabang";
+}
+
+
+interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    token: string;
+    admin: {
+      id: number;
+      email: string;
+      role: string;
+      photo: string | null;
+      branch: {
+        id: number;
+        name: string;
+        address: string;
+      } | null;
+    };
+  };
+}
+
+export interface OperationalHourDay {
+  open: string;
+  close: string;
+  isClosed: boolean;
+}
+
+export interface ProfileData {
+  admin: {
+    id: number;
+    email: string;
+    phone: string;
+    role: string;
+    photo: string | null;
+    created_at: string;
+  };
+  branch: {
+    id: number;
+    name: string;
+    address: string;
+    contact: string;
+    operational_hours: Record<string, OperationalHourDay>;
+    time_slots: string[];
+    services: string[];
+    photo: string | null;  // ← tambahkan ini
+  } | null;
+}
+export interface ProfileResponse {
+  success: boolean;
+  data: ProfileData;
+}
+
+export const authAPI = {
+  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Lempar error dengan message dari backend
+      throw new Error(data.message || "Login gagal");
+    }
+
+    return data;
+  },
+
+  getMe: async (token: string) => {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  
+};
+
+const getAuthHeaders = () => {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+export const branchAPI = {
+  getAll: async (): Promise<BranchListResponse> => {
+    const res = await fetch(`${API_URL}/branches`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal memuat data cabang");
+    return data;
+  },
+
+  create: async (payload: CreateBranchPayload): Promise<ApiResponse> => {
+    const res = await fetch(`${API_URL}/branches`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal menambahkan cabang");
+    return data;
+  },
+
+  delete: async (branchId: number): Promise<ApiResponse> => {
+    const res = await fetch(`${API_URL}/branches/${branchId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal menghapus cabang");
+    return data;
+  },
+};
+
+export const profileAPI = {
+  /**
+   * GET /api/profile — ambil data profil admin yang login
+   */
+  get: async (): Promise<ProfileResponse> => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal memuat profil");
+    return data;
+  },
+
+  /**
+   * PUT /api/profile — update profil + upload foto
+   * Pakai FormData karena ada file upload
+   */
+  update: async (payload: {
+  email?: string;
+  phone?: string;
+  branch_name?: string;
+  branch_address?: string;
+  branch_contact?: string;
+  operational_hours?: Record<string, OperationalHourDay>;
+  time_slots?: string;
+  photoFile?: File | null;
+  branchPhotoFile?: File | null;  // ← tambahkan ini
+}): Promise<{ success: boolean; message: string; data: ProfileData }> => {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+
+  if (payload.email) formData.append("email", payload.email);
+  if (payload.phone) formData.append("phone", payload.phone);
+  if (payload.branch_name) formData.append("branch_name", payload.branch_name);
+  if (payload.branch_address) formData.append("branch_address", payload.branch_address);
+  if (payload.branch_contact) formData.append("branch_contact", payload.branch_contact);
+  if (payload.operational_hours) {
+    formData.append("operational_hours", JSON.stringify(payload.operational_hours));
+  }
+  if (payload.time_slots) formData.append("time_slots", payload.time_slots);
+  if (payload.photoFile) formData.append("photo", payload.photoFile);
+  // ← Tambahkan ini: field name harus "branch_photo" sesuai backend
+  if (payload.branchPhotoFile) formData.append("branch_photo", payload.branchPhotoFile);
+
+  const res = await fetch(`${API_URL}/profile`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gagal menyimpan perubahan");
+  return data;
+},
+};
+
+export const getAdminPhotoUrl = (filename: string | null | undefined): string | null => {
+  if (!filename) return null;
+  // Kalau sudah full URL (http/https), langsung return
+  if (filename.startsWith("http")) return filename;
+  return `${BACKEND_BASE_URL}/uploads/admins/${filename}`;
+};
+
+export const getBranchPhotoUrl = (filename: string | null | undefined): string | null => {
+  if (!filename) return null;
+  if (filename.startsWith("http")) return filename;
+  return `${BACKEND_BASE_URL}/uploads/branches/${filename}`;
+};
