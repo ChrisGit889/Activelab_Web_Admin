@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image } from "react-bootstrap";
+import Image from "next/image";
 import { authAPI } from "../lib/api";
-import Link from "next/link";
-
+import "./login.css";
 
 export default function Login() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,88 +24,127 @@ export default function Login() {
       const response = await authAPI.login({ email, password });
 
       if (response.success && response.data) {
-        // Simpan token & data admin ke localStorage
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("admin", JSON.stringify(response.data.admin));
-        //document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}`;
-        // Redirect berdasarkan role
-        router.push("/dashboard");
+        setShowPopup(true);
+
+        setTimeout(() => {
+          setIsExiting(true);
+        }, 2000);
+
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2800);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login gagal";
       setErrorMessage(message);
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="admin-gradient min-vh-100 d-flex flex-column justify-content-center align-items-center">
-      <div className="mb-3">
-        <Image
-          src="/images/logo_activelab.png"
-          alt="Logo ActiveLab"
-          width={120}
-          height={120}
-        />
-      </div>
+    <>
+      <div className={`login-wrapper ${isExiting ? "is-exiting" : ""}`}>
+        <div className="bg-orb bg-orb-1" />
+        <div className="bg-orb bg-orb-2" />
+        <div className="bg-orb bg-orb-3" />
 
-      <div className="bg-white p-4 rounded shadow" style={{ width: "340px" }}>
-        <h4 className="text-center mb-3">Login Admin</h4>
+        <div className="login-card">
+          <div className="logo-wrap">
+            <div className="logo-box">
+              <Image
+                src="/images/logo_activelab.png"
+                alt="ActiveLab Logo"
+                width={50}
+                height={50}
+                style={{ objectFit: "contain" }}
+              />
+            </div>
+            <p className="logo-title">Welcome Back</p>
+            <p className="logo-sub">ActiveLab Admin Panel</p>
+          </div>
 
-        {/* Error message dari API */}
-        {errorMessage && (
-          <div className="alert alert-danger py-2 mb-3" role="alert">
-            {errorMessage}
+          {errorMessage && (
+            <div className="alert-box alert-error">{errorMessage}</div>
+          )}
+
+          <form onSubmit={handleLogin}>
+            <div className="field-wrap">
+              <label className="field-label">Email</label>
+              <input
+                type="email"
+                className="field-input"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="field-wrap">
+              <label className="field-label">Password</label>
+              <input
+                type="password"
+                className="field-input"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button type="submit" className="btn-signin" disabled={isLoading}>
+              {isLoading ? "Authenticating..." : "Sign In"}
+            </button>
+          </form>
+
+          <div className="divider">
+            <div className="divider-line" />
+            <span className="divider-text">secured by ActiveLab</span>
+            <div className="divider-line" />
+          </div>
+        </div>
+
+        {showPopup && (
+          <div className="success-overlay">
+            <div className={`success-popup ${isExiting ? "pop-out" : ""}`}>
+              <div className="check-container">
+                <svg
+                  className="checkmark"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 52 52"
+                >
+                  <circle
+                    className="checkmark-circle"
+                    cx="26"
+                    cy="26"
+                    r="25"
+                    fill="none"
+                  />
+                  <path
+                    className="checkmark-check"
+                    fill="none"
+                    d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                  />
+                </svg>
+              </div>
+              <h3 className="success-title">Access Granted</h3>
+              <p className="success-desc">
+                Welcome back, Admin.
+                <br />
+                Preparing your workspace...
+              </p>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                />
-                Memproses...
-              </>
-            ) : (
-              "Login"
-            )}
-          </button>
-        </form>
+        <div className={`page-wipe ${isExiting ? "active" : ""}`} />
       </div>
-    </div>
+    </>
   );
 }
