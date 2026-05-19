@@ -76,10 +76,7 @@ export default function DashboardLayout({
         </ul>
 
         {/* Kelola Cabang — pakai onClick, bukan Link langsung */}
-        <button
-          onClick={handleKelolaCabang}
-          className="btn btn-warning mt-3"
-        >
+        <button onClick={handleKelolaCabang} className="btn btn-warning mt-3">
           Kelola Cabang
         </button>
 
