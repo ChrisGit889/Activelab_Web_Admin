@@ -2,6 +2,43 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:5000";
 // ─── Branch API ────────────────────────────────────────────────
 
+
+export interface ServiceName {
+  id: number;
+  name: string;
+  created_at?: string;
+}
+
+export interface Staff {
+  id: number;
+  name: string;
+  contact: string | null;
+  image: string | null;
+  description: string | null;
+  created_at?: string;
+}
+
+export interface ServiceType {
+  id: number;
+  name: string;
+  created_at?: string;
+  services: ServiceName[];
+}
+
+export interface RoomName {
+  id: number;
+  name: string;
+  capacity: number;
+  created_at?: string;
+}
+
+export interface RoomType {
+  id: number;
+  name: string;
+  created_at?: string;
+  rooms: RoomName[];
+}
+
 export interface OperationalHours {
   [day: string]: {
     open: string;
@@ -250,4 +287,246 @@ export const getBranchPhotoUrl = (filename: string | null | undefined): string |
   if (!filename) return null;
   if (filename.startsWith("http")) return filename;
   return `${BACKEND_BASE_URL}/uploads/branches/${filename}`;
+};
+
+// ─── Service API ──────────────────────────────────────────────
+
+export const serviceAPI = {
+  getAll: async (): Promise<{ success: boolean; data: ServiceType[] }> => {
+    const res = await fetch(`${API_URL}/services`, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  // ── Service Type ──────────────────────────────────────────
+  createType: async (name: string): Promise<{ success: boolean; message: string; data: ServiceType }> => {
+    const res = await fetch(`${API_URL}/services/types`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  updateType: async (typeId: number, name: string): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/services/types/${typeId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  deleteType: async (typeId: number): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/services/types/${typeId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  // ── Service Name ──────────────────────────────────────────
+  createName: async (typeId: number, name: string): Promise<{ success: boolean; message: string; data: ServiceName }> => {
+    const res = await fetch(`${API_URL}/services/types/${typeId}/names`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  updateName: async (nameId: number, name: string): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/services/names/${nameId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  deleteName: async (nameId: number): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/services/names/${nameId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+};
+
+// ─── Room API ─────────────────────────────────────────────────
+
+export const roomAPI = {
+  getAll: async (): Promise<{ success: boolean; data: RoomType[] }> => {
+    const res = await fetch(`${API_URL}/rooms`, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  // ── Room Type ─────────────────────────────────────────────
+  createType: async (name: string): Promise<{ success: boolean; message: string; data: RoomType }> => {
+    const res = await fetch(`${API_URL}/rooms/types`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  updateType: async (typeId: number, name: string): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/rooms/types/${typeId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  deleteType: async (typeId: number): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/rooms/types/${typeId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  // ── Room Name ─────────────────────────────────────────────
+  createRoom: async (typeId: number, name: string, capacity: number): Promise<{ success: boolean; message: string; data: RoomName }> => {
+    const res = await fetch(`${API_URL}/rooms/types/${typeId}/rooms`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, capacity }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  updateRoom: async (roomId: number, name: string, capacity: number): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/rooms/rooms/${roomId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, capacity }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+
+  deleteRoom: async (roomId: number): Promise<{ success: boolean; message: string }> => {
+    const res = await fetch(`${API_URL}/rooms/rooms/${roomId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    return data;
+  },
+};
+
+// ─── Helper URL foto staff ─────────────────────────────────────
+
+export const getStaffPhotoUrl = (filename: string | null | undefined): string | null => {
+  if (!filename) return null;
+  if (filename.startsWith("http")) return filename;
+  return `${BACKEND_BASE_URL}/uploads/staffs/${filename}`;
+};
+
+// ─── Staff API ────────────────────────────────────────────────
+
+export const staffAPI = {
+  getAll: async (): Promise<{ success: boolean; data: Staff[] }> => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/staff`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal memuat data staff");
+    return data;
+  },
+
+  create: async (payload: {
+    name: string;
+    contact: string;
+    description: string;
+    imageFile: File | null;
+  }): Promise<{ success: boolean; message: string; data: Staff }> => {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+
+    formData.append("name", payload.name);
+    formData.append("contact", payload.contact);
+    formData.append("description", payload.description);
+    if (payload.imageFile) {
+      formData.append("staff_image", payload.imageFile);
+    }
+
+    const res = await fetch(`${API_URL}/staff`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal menambahkan staff");
+    return data;
+  },
+
+  update: async (
+    staffId: number,
+    payload: {
+      name: string;
+      contact: string;
+      description: string;
+      imageFile: File | null;
+    }
+  ): Promise<{ success: boolean; message: string; data: Staff }> => {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+
+    formData.append("name", payload.name);
+    formData.append("contact", payload.contact);
+    formData.append("description", payload.description);
+    if (payload.imageFile) {
+      formData.append("staff_image", payload.imageFile);
+    }
+
+    const res = await fetch(`${API_URL}/staff/${staffId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal memperbarui staff");
+    return data;
+  },
+
+  delete: async (staffId: number): Promise<{ success: boolean; message: string }> => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/staff/${staffId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal menghapus staff");
+    return data;
+  },
 };

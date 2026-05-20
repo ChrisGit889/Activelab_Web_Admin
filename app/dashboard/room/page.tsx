@@ -3,38 +3,37 @@
 import { useState, useEffect, useCallback } from "react";
 import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
 import { Spinner } from "react-bootstrap";
-import { serviceAPI, ServiceType } from "../../lib/api";
+import { roomAPI, RoomType } from "../../lib/api";
 
-export default function ServiceManagementPage() {
-  // ── State data ────────────────────────────────────────────────
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+export default function RoomManagementPage() {
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
 
-  // ── State modal form (tambah/edit) ────────────────────────────
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
-    type: "add-type" | "edit-type" | "add-name" | "edit-name";
+    type: "add-type" | "edit-type" | "add-room" | "edit-room";
     typeId?: number;
-    nameId?: number;
-    inputValue: string;
+    roomId?: number;
+    inputName: string;
+    inputCapacity: string;
     isLoading: boolean;
     error: string;
   }>({
     isOpen: false,
     type: "add-type",
-    inputValue: "",
+    inputName: "",
+    inputCapacity: "",
     isLoading: false,
     error: "",
   });
 
-  // ── State modal konfirmasi hapus ──────────────────────────────
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
-    mode: "type" | "name";
+    mode: "type" | "room";
     typeId: number;
-    nameId?: number;
+    roomId?: number;
     targetName: string;
     isLoading: boolean;
     error: string;
@@ -47,14 +46,12 @@ export default function ServiceManagementPage() {
     error: "",
   });
 
-  // ─── Fetch data ────────────────────────────────────────────────
-  const fetchServices = useCallback(async () => {
+  const fetchRooms = useCallback(async () => {
     setIsLoading(true);
     setPageError("");
     try {
-      const res = await serviceAPI.getAll();
-      setServiceTypes(res.data);
-      // Set tab aktif ke yang pertama kalau belum ada
+      const res = await roomAPI.getAll();
+      setRoomTypes(res.data);
       if (res.data.length > 0 && activeTabId === null) {
         setActiveTabId(res.data[0].id);
       }
@@ -66,109 +63,100 @@ export default function ServiceManagementPage() {
   }, [activeTabId]);
 
   useEffect(() => {
-    fetchServices();
+    fetchRooms();
   }, []); // eslint-disable-line
 
-  const activeTab = serviceTypes.find((t) => t.id === activeTabId) ?? serviceTypes[0] ?? null;
+  const activeTab = roomTypes.find((t) => t.id === activeTabId) ?? roomTypes[0] ?? null;
 
-  // ─── Buka modal form ───────────────────────────────────────────
   const openModal = (
-    type: "add-type" | "edit-type" | "add-name" | "edit-name",
+    type: "add-type" | "edit-type" | "add-room" | "edit-room",
     typeId?: number,
-    nameId?: number,
-    initialValue = ""
+    roomId?: number,
+    initialName = "",
+    initialCapacity = ""
   ) => {
-    setModalConfig({
-      isOpen: true,
-      type,
-      typeId,
-      nameId,
-      inputValue: initialValue,
-      isLoading: false,
-      error: "",
-    });
+    setModalConfig({ isOpen: true, type, typeId, roomId, inputName: initialName, inputCapacity: initialCapacity, isLoading: false, error: "" });
   };
 
-  // ─── Submit form (tambah/edit) ─────────────────────────────────
   const handleSave = async () => {
-    const value = modalConfig.inputValue.trim();
-    if (!value) {
-      setModalConfig((prev) => ({ ...prev, error: "Input tidak boleh kosong" }));
+    const name = modalConfig.inputName.trim();
+    if (!name) {
+      setModalConfig((prev) => ({ ...prev, error: "Nama tidak boleh kosong" }));
       return;
+    }
+
+    const capacity = parseInt(modalConfig.inputCapacity);
+    if ((modalConfig.type === "add-room" || modalConfig.type === "edit-room")) {
+      if (!modalConfig.inputCapacity || isNaN(capacity) || capacity < 1) {
+        setModalConfig((prev) => ({ ...prev, error: "Kapasitas minimal 1" }));
+        return;
+      }
     }
 
     setModalConfig((prev) => ({ ...prev, isLoading: true, error: "" }));
 
     try {
       if (modalConfig.type === "add-type") {
-        const res = await serviceAPI.createType(value);
-        // Tambahkan langsung ke state tanpa refetch
-        setServiceTypes((prev) => [...prev, res.data]);
+        const res = await roomAPI.createType(name);
+        setRoomTypes((prev) => [...prev, res.data]);
         setActiveTabId(res.data.id);
 
       } else if (modalConfig.type === "edit-type" && modalConfig.typeId) {
-        await serviceAPI.updateType(modalConfig.typeId, value);
-        setServiceTypes((prev) =>
-          prev.map((t) => t.id === modalConfig.typeId ? { ...t, name: value } : t)
+        await roomAPI.updateType(modalConfig.typeId, name);
+        setRoomTypes((prev) =>
+          prev.map((t) => t.id === modalConfig.typeId ? { ...t, name } : t)
         );
 
-      } else if (modalConfig.type === "add-name" && modalConfig.typeId) {
-        const res = await serviceAPI.createName(modalConfig.typeId, value);
-        setServiceTypes((prev) =>
+      } else if (modalConfig.type === "add-room" && modalConfig.typeId) {
+        const res = await roomAPI.createRoom(modalConfig.typeId, name, capacity);
+        setRoomTypes((prev) =>
           prev.map((t) =>
             t.id === modalConfig.typeId
-              ? { ...t, services: [...t.services, res.data] }
+              ? { ...t, rooms: [...t.rooms, res.data] }
               : t
           )
         );
 
-      } else if (modalConfig.type === "edit-name" && modalConfig.nameId) {
-        await serviceAPI.updateName(modalConfig.nameId, value);
-        setServiceTypes((prev) =>
+      } else if (modalConfig.type === "edit-room" && modalConfig.roomId) {
+        await roomAPI.updateRoom(modalConfig.roomId, name, capacity);
+        setRoomTypes((prev) =>
           prev.map((t) => ({
             ...t,
-            services: t.services.map((s) =>
-              s.id === modalConfig.nameId ? { ...s, name: value } : s
+            rooms: t.rooms.map((r) =>
+              r.id === modalConfig.roomId ? { ...r, name, capacity } : r
             ),
           }))
         );
       }
 
-      setModalConfig((prev) => ({ ...prev, isOpen: false, inputValue: "" }));
+      setModalConfig((prev) => ({ ...prev, isOpen: false, inputName: "", inputCapacity: "" }));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
       setModalConfig((prev) => ({ ...prev, error: message, isLoading: false }));
     }
   };
 
-  // ─── Buka modal hapus ──────────────────────────────────────────
-  const openDeleteModal = (
-    mode: "type" | "name",
-    typeId: number,
-    nameId?: number,
-    targetName = ""
-  ) => {
-    setDeleteModal({ isOpen: true, mode, typeId, nameId, targetName, isLoading: false, error: "" });
+  const openDeleteModal = (mode: "type" | "room", typeId: number, roomId?: number, targetName = "") => {
+    setDeleteModal({ isOpen: true, mode, typeId, roomId, targetName, isLoading: false, error: "" });
   };
 
-  // ─── Konfirmasi hapus ──────────────────────────────────────────
   const confirmDelete = async () => {
     setDeleteModal((prev) => ({ ...prev, isLoading: true, error: "" }));
 
     try {
       if (deleteModal.mode === "type") {
-        await serviceAPI.deleteType(deleteModal.typeId);
-        const remaining = serviceTypes.filter((t) => t.id !== deleteModal.typeId);
-        setServiceTypes(remaining);
+        await roomAPI.deleteType(deleteModal.typeId);
+        const remaining = roomTypes.filter((t) => t.id !== deleteModal.typeId);
+        setRoomTypes(remaining);
         if (activeTabId === deleteModal.typeId) {
           setActiveTabId(remaining.length > 0 ? remaining[0].id : null);
         }
-      } else if (deleteModal.nameId) {
-        await serviceAPI.deleteName(deleteModal.nameId);
-        setServiceTypes((prev) =>
+      } else if (deleteModal.roomId) {
+        await roomAPI.deleteRoom(deleteModal.roomId);
+        setRoomTypes((prev) =>
           prev.map((t) => ({
             ...t,
-            services: t.services.filter((s) => s.id !== deleteModal.nameId),
+            rooms: t.rooms.filter((r) => r.id !== deleteModal.roomId),
           }))
         );
       }
@@ -179,12 +167,11 @@ export default function ServiceManagementPage() {
     }
   };
 
-  // ─── Render loading ────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="container py-5 text-center">
         <Spinner animation="border" variant="primary" />
-        <p className="text-muted mt-2">Memuat data service...</p>
+        <p className="text-muted mt-2">Memuat data ruangan...</p>
       </div>
     );
   }
@@ -194,32 +181,24 @@ export default function ServiceManagementPage() {
       <div className="container py-4">
         <div className="alert alert-danger">
           {pageError}
-          <button className="btn btn-sm btn-outline-danger ms-3" onClick={fetchServices}>
-            Coba Lagi
-          </button>
+          <button className="btn btn-sm btn-outline-danger ms-3" onClick={fetchRooms}>Coba Lagi</button>
         </div>
       </div>
     );
   }
 
-  // ─── RENDER UTAMA ──────────────────────────────────────────────
   return (
     <div className="container py-4">
-      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="m-0 fw-bold">Service Management</h4>
-        <button
-          className="btn btn-primary d-flex align-items-center gap-2"
-          onClick={() => openModal("add-type")}
-        >
-          <FiPlus /> Tambah Service Type
+        <h4 className="m-0 fw-bold">Room Management</h4>
+        <button className="btn btn-primary d-flex align-items-center gap-2" onClick={() => openModal("add-type")}>
+          <FiPlus /> Tambah Room Type
         </button>
       </div>
 
-      {/* Tabs service type */}
-      {serviceTypes.length === 0 ? (
+      {roomTypes.length === 0 ? (
         <div className="text-center py-5 text-muted">
-          <p>Belum ada service type.</p>
+          <p>Belum ada room type.</p>
         </div>
       ) : (
         <>
@@ -227,7 +206,7 @@ export default function ServiceManagementPage() {
             className="d-flex align-items-center gap-2 flex-wrap mb-4"
             style={{ borderBottom: "2px solid #dee2e6", paddingBottom: "10px" }}
           >
-            {serviceTypes.map((tab) => (
+            {roomTypes.map((tab) => (
               <div
                 key={tab.id}
                 className="d-flex align-items-center gap-2 px-3 py-2 rounded-top"
@@ -258,43 +237,43 @@ export default function ServiceManagementPage() {
             ))}
           </div>
 
-          {/* Daftar service name */}
           {activeTab && (
             <div className="p-4 bg-light rounded shadow-sm">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="m-0 fw-semibold">
-                  Daftar Service di <span className="text-primary">{activeTab.name}</span>
-                  <span className="badge bg-secondary ms-2">{activeTab.services.length}</span>
+                  Daftar Ruangan di <span className="text-primary">{activeTab.name}</span>
+                  <span className="badge bg-secondary ms-2">{activeTab.rooms.length}</span>
                 </h5>
                 <button
                   className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
-                  onClick={() => openModal("add-name", activeTab.id)}
+                  onClick={() => openModal("add-room", activeTab.id)}
                 >
-                  <FiPlus /> Tambah Nama Service
+                  <FiPlus /> Tambah Ruangan
                 </button>
               </div>
 
-              {activeTab.services.length === 0 ? (
-                <p className="text-muted text-center py-3">
-                  Belum ada service.
-                </p>
+              {activeTab.rooms.length === 0 ? (
+                <p className="text-muted text-center py-3">Belum ada ruangan di tipe ini.</p>
               ) : (
                 <div className="row row-cols-1 row-cols-md-3 g-3">
-                  {activeTab.services.map((item) => (
-                    <div key={item.id} className="col">
+                  {activeTab.rooms.map((room) => (
+                    <div key={room.id} className="col">
                       <div className="card h-100 border-0 shadow-sm">
                         <div className="card-body d-flex justify-content-between align-items-center">
-                          <span style={{ fontWeight: 500 }}>{item.name}</span>
+                          <div>
+                            <span className="d-block fw-medium">{room.name}</span>
+                            <small className="text-muted">Kapasitas: {room.capacity} orang</small>
+                          </div>
                           <div className="d-flex gap-2">
                             <button
                               className="btn btn-sm btn-light text-primary rounded-circle"
-                              onClick={() => openModal("edit-name", activeTab.id, item.id, item.name)}
+                              onClick={() => openModal("edit-room", activeTab.id, room.id, room.name, room.capacity.toString())}
                             >
                               <FiEdit2 size={14} />
                             </button>
                             <button
                               className="btn btn-sm btn-light text-danger rounded-circle"
-                              onClick={() => openDeleteModal("name", activeTab.id, item.id, item.name)}
+                              onClick={() => openDeleteModal("room", activeTab.id, room.id, room.name)}
                             >
                               <FiTrash2 size={14} />
                             </button>
@@ -312,32 +291,44 @@ export default function ServiceManagementPage() {
 
       {/* Modal Tambah / Edit */}
       {modalConfig.isOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
-        >
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}>
           <div className="bg-white p-4 rounded shadow" style={{ width: 400 }}>
             <h5 className="mb-3">
-              {modalConfig.type === "add-type" && "Tambah Service Type"}
-              {modalConfig.type === "edit-type" && "Ubah Service Type"}
-              {modalConfig.type === "add-name" && "Tambah Nama Service"}
-              {modalConfig.type === "edit-name" && "Ubah Nama Service"}
+              {modalConfig.type === "add-type" && "Tambah Room Type"}
+              {modalConfig.type === "edit-type" && "Ubah Room Type"}
+              {modalConfig.type === "add-room" && "Tambah Ruangan Baru"}
+              {modalConfig.type === "edit-room" && "Ubah Ruangan"}
             </h5>
 
             {modalConfig.error && (
               <div className="alert alert-danger py-2 small mb-3">{modalConfig.error}</div>
             )}
 
-            <input
-              type="text"
-              className="form-control mb-4"
-              placeholder="Masukkan nama..."
-              value={modalConfig.inputValue}
-              onChange={(e) => setModalConfig((prev) => ({ ...prev, inputValue: e.target.value }))}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
-              autoFocus
-              disabled={modalConfig.isLoading}
-            />
+            <div className="mb-3">
+              <label className="form-label small">Nama</label>
+              <input
+                type="text"
+                className="form-control"
+                value={modalConfig.inputName}
+                onChange={(e) => setModalConfig((prev) => ({ ...prev, inputName: e.target.value }))}
+                disabled={modalConfig.isLoading}
+                autoFocus
+              />
+            </div>
+
+            {(modalConfig.type === "add-room" || modalConfig.type === "edit-room") && (
+              <div className="mb-4">
+                <label className="form-label small">Kapasitas (Orang)</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="form-control"
+                  value={modalConfig.inputCapacity}
+                  onChange={(e) => setModalConfig((prev) => ({ ...prev, inputCapacity: e.target.value }))}
+                  disabled={modalConfig.isLoading}
+                />
+              </div>
+            )}
 
             <div className="d-flex justify-content-end gap-2">
               <button
@@ -347,11 +338,7 @@ export default function ServiceManagementPage() {
               >
                 Batal
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleSave}
-                disabled={modalConfig.isLoading}
-              >
+              <button className="btn btn-primary" onClick={handleSave} disabled={modalConfig.isLoading}>
                 {modalConfig.isLoading ? (
                   <><Spinner as="span" animation="border" size="sm" className="me-1" /> Menyimpan...</>
                 ) : "Simpan"}
@@ -363,10 +350,7 @@ export default function ServiceManagementPage() {
 
       {/* Modal Konfirmasi Hapus */}
       {deleteModal.isOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
-        >
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
           <div className="bg-white p-4 rounded shadow-sm border" style={{ width: 380 }}>
             <h5 className="mb-3 fw-semibold" style={{ color: "#dc3545" }}>Konfirmasi Hapus</h5>
 
@@ -376,9 +360,9 @@ export default function ServiceManagementPage() {
 
             <p className="text-secondary mb-4" style={{ fontSize: 15 }}>
               {deleteModal.mode === "type" ? (
-                <>Hapus tipe service <strong>{deleteModal.targetName}</strong> beserta semua service di dalamnya?</>
+                <>Hapus tipe ruangan <strong>&ldquo;{deleteModal.targetName}&rdquo;</strong> beserta semua ruangan di dalamnya?</>
               ) : (
-                <>Hapus service <strong>{deleteModal.targetName}</strong>?</>
+                <>Hapus ruangan <strong>&ldquo;{deleteModal.targetName}&rdquo;</strong>?</>
               )}
             </p>
 
@@ -390,11 +374,7 @@ export default function ServiceManagementPage() {
               >
                 Batal
               </button>
-              <button
-                className="btn btn-danger"
-                onClick={confirmDelete}
-                disabled={deleteModal.isLoading}
-              >
+              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleteModal.isLoading}>
                 {deleteModal.isLoading ? (
                   <><Spinner as="span" animation="border" size="sm" className="me-1" /> Menghapus...</>
                 ) : "Hapus"}

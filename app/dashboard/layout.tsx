@@ -63,6 +63,7 @@ export default function DashboardLayout({
             { name: "Membership", path: "/dashboard/member" },
             { name: "Schedule", path: "/dashboard/schedule" },
             { name: "Staff", path: "/dashboard/staff" },
+            { name: "Room", path: "/dashboard/room" },
           ].map((item) => (
             <li key={item.name}>
               <Link
