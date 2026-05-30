@@ -69,19 +69,8 @@ export default function DashboardLayout({
           flex-shrink: 0;
         }
 
-        .sidebar::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-          pointer-events: none;
-        }
-
         .sidebar-logo {
-          padding: 28px 20px 20px;
+          padding: 28px 16px 22px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -90,7 +79,8 @@ export default function DashboardLayout({
         }
 
         .sidebar-logo img {
-          filter: brightness(1.1);
+          filter: brightness(0) invert(1);
+          opacity: 0.95;
         }
 
         .nav-section {
@@ -232,8 +222,8 @@ export default function DashboardLayout({
             <Image
               src="/images/logo_activelab.png"
               alt="Logo ActiveLab"
-              width={90}
-              height={90}
+              width={700}
+              height={100}
               style={{ objectFit: "contain" }}
             />
           </div>

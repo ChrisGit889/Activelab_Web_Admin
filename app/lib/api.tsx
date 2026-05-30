@@ -1,6 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:5000";
-
+const BACKEND_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
+  "http://localhost:5000";
 
 export interface MembershipBenefit {
   id: number;
@@ -108,7 +109,6 @@ export interface CreateBranchPayload {
   admin_role: "pusat" | "cabang";
 }
 
-
 interface LoginPayload {
   email: string;
   password: string;
@@ -156,7 +156,7 @@ export interface ProfileData {
     operational_hours: Record<string, OperationalHourDay>;
     time_slots: string[];
     services: string[];
-    photo: string | null; 
+    photo: string | null;
   } | null;
 }
 export interface ProfileResponse {
@@ -164,14 +164,13 @@ export interface ProfileResponse {
   data: ProfileData;
 }
 
-
 export interface ClashError {
   type: "room" | "staff";
   message: string;
 }
 
 export interface CopyClashError {
-  schedule: string; 
+  schedule: string;
   clashes: ClashError[];
 }
 
@@ -187,7 +186,7 @@ export interface Schedule {
   end_time: string;
   duration_minutes: number;
   timezone: string;
-  slot: number;   // ← tambahkan ini
+  slot: number; // ← tambahkan ini
   service_type: { id: number; name: string };
   service_name: { id: number; name: string };
   room_type: { id: number; name: string };
@@ -207,7 +206,6 @@ export interface SchedulePayload {
   staff_ids: number[];
 }
 
-
 export const authAPI = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
     const res = await fetch(`${API_URL}/auth/login`, {
@@ -221,7 +219,6 @@ export const authAPI = {
     const data = await res.json();
 
     if (!res.ok) {
-
       throw new Error(data.message || "Login gagal");
     }
 
@@ -240,8 +237,6 @@ export const authAPI = {
     if (!res.ok) throw new Error(data.message);
     return data;
   },
-
-  
 };
 
 const getAuthHeaders = () => {
@@ -286,7 +281,6 @@ export const branchAPI = {
 };
 
 export const profileAPI = {
-
   get: async (): Promise<ProfileResponse> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/profile`, {
@@ -297,70 +291,80 @@ export const profileAPI = {
     return data;
   },
 
-
-
   update: async (payload: {
-  email?: string;
-  phone?: string;
-  branch_name?: string;
-  branch_address?: string;
-  branch_contact?: string;
-  operational_hours?: Record<string, OperationalHourDay>;
-  time_slots?: string;
-  photoFile?: File | null;
-  branchPhotoFile?: File | null;  
-}): Promise<{ success: boolean; message: string; data: ProfileData }> => {
-  const token = localStorage.getItem("token");
-  const formData = new FormData();
+    email?: string;
+    phone?: string;
+    branch_name?: string;
+    branch_address?: string;
+    branch_contact?: string;
+    operational_hours?: Record<string, OperationalHourDay>;
+    time_slots?: string;
+    photoFile?: File | null;
+    branchPhotoFile?: File | null;
+  }): Promise<{ success: boolean; message: string; data: ProfileData }> => {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
 
-  if (payload.email) formData.append("email", payload.email);
-  if (payload.phone) formData.append("phone", payload.phone);
-  if (payload.branch_name) formData.append("branch_name", payload.branch_name);
-  if (payload.branch_address) formData.append("branch_address", payload.branch_address);
-  if (payload.branch_contact) formData.append("branch_contact", payload.branch_contact);
-  if (payload.operational_hours) {
-    formData.append("operational_hours", JSON.stringify(payload.operational_hours));
-  }
-  if (payload.time_slots) formData.append("time_slots", payload.time_slots);
-  if (payload.photoFile) formData.append("photo", payload.photoFile);
-  if (payload.branchPhotoFile) formData.append("branch_photo", payload.branchPhotoFile);
+    if (payload.email) formData.append("email", payload.email);
+    if (payload.phone) formData.append("phone", payload.phone);
+    if (payload.branch_name)
+      formData.append("branch_name", payload.branch_name);
+    if (payload.branch_address)
+      formData.append("branch_address", payload.branch_address);
+    if (payload.branch_contact)
+      formData.append("branch_contact", payload.branch_contact);
+    if (payload.operational_hours) {
+      formData.append(
+        "operational_hours",
+        JSON.stringify(payload.operational_hours)
+      );
+    }
+    if (payload.time_slots) formData.append("time_slots", payload.time_slots);
+    if (payload.photoFile) formData.append("photo", payload.photoFile);
+    if (payload.branchPhotoFile)
+      formData.append("branch_photo", payload.branchPhotoFile);
 
-  const res = await fetch(`${API_URL}/profile`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
+    const res = await fetch(`${API_URL}/profile`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gagal menyimpan perubahan");
-  return data;
-},
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal menyimpan perubahan");
+    return data;
+  },
 };
 
-export const getAdminPhotoUrl = (filename: string | null | undefined): string | null => {
+export const getAdminPhotoUrl = (
+  filename: string | null | undefined
+): string | null => {
   if (!filename) return null;
   if (filename.startsWith("http")) return filename;
   return `${BACKEND_BASE_URL}/uploads/admins/${filename}`;
 };
 
-export const getBranchPhotoUrl = (filename: string | null | undefined): string | null => {
+export const getBranchPhotoUrl = (
+  filename: string | null | undefined
+): string | null => {
   if (!filename) return null;
   if (filename.startsWith("http")) return filename;
   return `${BACKEND_BASE_URL}/uploads/branches/${filename}`;
 };
 
-
-
 export const serviceAPI = {
   getAll: async (): Promise<{ success: boolean; data: ServiceType[] }> => {
-    const res = await fetch(`${API_URL}/services`, { headers: getAuthHeaders() });
+    const res = await fetch(`${API_URL}/services`, {
+      headers: getAuthHeaders(),
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
     return data;
   },
 
-
-  createType: async (name: string): Promise<{ success: boolean; message: string; data: ServiceType }> => {
+  createType: async (
+    name: string
+  ): Promise<{ success: boolean; message: string; data: ServiceType }> => {
     const res = await fetch(`${API_URL}/services/types`, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -371,7 +375,10 @@ export const serviceAPI = {
     return data;
   },
 
-  updateType: async (typeId: number, name: string): Promise<{ success: boolean; message: string }> => {
+  updateType: async (
+    typeId: number,
+    name: string
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/services/types/${typeId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -382,7 +389,9 @@ export const serviceAPI = {
     return data;
   },
 
-  deleteType: async (typeId: number): Promise<{ success: boolean; message: string }> => {
+  deleteType: async (
+    typeId: number
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/services/types/${typeId}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
@@ -392,8 +401,10 @@ export const serviceAPI = {
     return data;
   },
 
- 
-  createName: async (typeId: number, name: string): Promise<{ success: boolean; message: string; data: ServiceName }> => {
+  createName: async (
+    typeId: number,
+    name: string
+  ): Promise<{ success: boolean; message: string; data: ServiceName }> => {
     const res = await fetch(`${API_URL}/services/types/${typeId}/names`, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -404,7 +415,10 @@ export const serviceAPI = {
     return data;
   },
 
-  updateName: async (nameId: number, name: string): Promise<{ success: boolean; message: string }> => {
+  updateName: async (
+    nameId: number,
+    name: string
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/services/names/${nameId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -415,7 +429,9 @@ export const serviceAPI = {
     return data;
   },
 
-  deleteName: async (nameId: number): Promise<{ success: boolean; message: string }> => {
+  deleteName: async (
+    nameId: number
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/services/names/${nameId}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
@@ -426,7 +442,6 @@ export const serviceAPI = {
   },
 };
 
-
 export const roomAPI = {
   getAll: async (): Promise<{ success: boolean; data: RoomType[] }> => {
     const res = await fetch(`${API_URL}/rooms`, { headers: getAuthHeaders() });
@@ -435,7 +450,9 @@ export const roomAPI = {
     return data;
   },
 
-  createType: async (name: string): Promise<{ success: boolean; message: string; data: RoomType }> => {
+  createType: async (
+    name: string
+  ): Promise<{ success: boolean; message: string; data: RoomType }> => {
     const res = await fetch(`${API_URL}/rooms/types`, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -446,7 +463,10 @@ export const roomAPI = {
     return data;
   },
 
-  updateType: async (typeId: number, name: string): Promise<{ success: boolean; message: string }> => {
+  updateType: async (
+    typeId: number,
+    name: string
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/rooms/types/${typeId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -457,7 +477,9 @@ export const roomAPI = {
     return data;
   },
 
-  deleteType: async (typeId: number): Promise<{ success: boolean; message: string }> => {
+  deleteType: async (
+    typeId: number
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/rooms/types/${typeId}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
@@ -467,8 +489,11 @@ export const roomAPI = {
     return data;
   },
 
-
-  createRoom: async (typeId: number, name: string, capacity: number): Promise<{ success: boolean; message: string; data: RoomName }> => {
+  createRoom: async (
+    typeId: number,
+    name: string,
+    capacity: number
+  ): Promise<{ success: boolean; message: string; data: RoomName }> => {
     const res = await fetch(`${API_URL}/rooms/types/${typeId}/rooms`, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -479,7 +504,11 @@ export const roomAPI = {
     return data;
   },
 
-  updateRoom: async (roomId: number, name: string, capacity: number): Promise<{ success: boolean; message: string }> => {
+  updateRoom: async (
+    roomId: number,
+    name: string,
+    capacity: number
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/rooms/rooms/${roomId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -490,7 +519,9 @@ export const roomAPI = {
     return data;
   },
 
-  deleteRoom: async (roomId: number): Promise<{ success: boolean; message: string }> => {
+  deleteRoom: async (
+    roomId: number
+  ): Promise<{ success: boolean; message: string }> => {
     const res = await fetch(`${API_URL}/rooms/rooms/${roomId}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
@@ -501,15 +532,13 @@ export const roomAPI = {
   },
 };
 
-
-
-export const getStaffPhotoUrl = (filename: string | null | undefined): string | null => {
+export const getStaffPhotoUrl = (
+  filename: string | null | undefined
+): string | null => {
   if (!filename) return null;
   if (filename.startsWith("http")) return filename;
   return `${BACKEND_BASE_URL}/uploads/staffs/${filename}`;
 };
-
-
 
 export const staffAPI = {
   getAll: async (): Promise<{ success: boolean; data: Staff[] }> => {
@@ -577,7 +606,9 @@ export const staffAPI = {
     return data;
   },
 
-  delete: async (staffId: number): Promise<{ success: boolean; message: string }> => {
+  delete: async (
+    staffId: number
+  ): Promise<{ success: boolean; message: string }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/staff/${staffId}`, {
       method: "DELETE",
@@ -588,8 +619,6 @@ export const staffAPI = {
     return data;
   },
 };
-
-
 
 export const membershipAPI = {
   getAll: async (): Promise<{ success: boolean; data: Membership[] }> => {
@@ -602,7 +631,9 @@ export const membershipAPI = {
     return data;
   },
 
-  create: async (payload: MembershipPayload): Promise<{ success: boolean; message: string; data: Membership }> => {
+  create: async (
+    payload: MembershipPayload
+  ): Promise<{ success: boolean; message: string; data: Membership }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/memberships`, {
       method: "POST",
@@ -613,11 +644,15 @@ export const membershipAPI = {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Gagal menambahkan membership");
+    if (!res.ok)
+      throw new Error(data.message || "Gagal menambahkan membership");
     return data;
   },
 
-  update: async (id: number, payload: MembershipPayload): Promise<{ success: boolean; message: string; data: Membership }> => {
+  update: async (
+    id: number,
+    payload: MembershipPayload
+  ): Promise<{ success: boolean; message: string; data: Membership }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/memberships/${id}`, {
       method: "PUT",
@@ -628,11 +663,14 @@ export const membershipAPI = {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Gagal memperbarui membership");
+    if (!res.ok)
+      throw new Error(data.message || "Gagal memperbarui membership");
     return data;
   },
 
-  delete: async (id: number): Promise<{ success: boolean; message: string }> => {
+  delete: async (
+    id: number
+  ): Promise<{ success: boolean; message: string }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/memberships/${id}`, {
       method: "DELETE",
@@ -643,9 +681,6 @@ export const membershipAPI = {
     return data;
   },
 };
-
-
-
 
 export const scheduleAPI = {
   getByDate: async (
@@ -664,34 +699,54 @@ export const scheduleAPI = {
 
   create: async (
     payload: SchedulePayload
-  ): Promise<{ success: boolean; message: string; data?: Schedule; clashes?: ClashError[] }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: Schedule;
+    clashes?: ClashError[];
+  }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/schedules`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok && res.status !== 409) throw new Error(data.message || "Gagal membuat jadwal");
+    if (!res.ok && res.status !== 409)
+      throw new Error(data.message || "Gagal membuat jadwal");
     return data;
   },
 
   update: async (
     id: number,
     payload: SchedulePayload
-  ): Promise<{ success: boolean; message: string; data?: Schedule; clashes?: ClashError[] }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: Schedule;
+    clashes?: ClashError[];
+  }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/schedules/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok && res.status !== 409) throw new Error(data.message || "Gagal memperbarui jadwal");
+    if (!res.ok && res.status !== 409)
+      throw new Error(data.message || "Gagal memperbarui jadwal");
     return data;
   },
 
-  delete: async (id: number): Promise<{ success: boolean; message: string }> => {
+  delete: async (
+    id: number
+  ): Promise<{ success: boolean; message: string }> => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/schedules/${id}`, {
       method: "DELETE",
@@ -715,7 +770,10 @@ export const scheduleAPI = {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_URL}/schedules/copy`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         service_name_id: serviceNameId,
         source_date: sourceDate,
@@ -723,7 +781,8 @@ export const scheduleAPI = {
       }),
     });
     const data = await res.json();
-    if (!res.ok && res.status !== 409) throw new Error(data.message || "Gagal menyalin jadwal");
+    if (!res.ok && res.status !== 409)
+      throw new Error(data.message || "Gagal menyalin jadwal");
     return data;
   },
 };
