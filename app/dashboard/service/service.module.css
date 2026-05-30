@@ -722,3 +722,74 @@
     padding: 4px 9px;
   }
 }
+
+/* ── Tab X variant merah ── */
+.tabXRed:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* ── Sort Dropdown ── */
+.sortWrap {
+  position: relative;
+}
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.sortBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 50;
+  overflow: hidden;
+  animation: fadeIn 0.12s ease;
+}
+
+.sortItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #475569;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.sortItem:hover {
+  background: #f8fafc;
+}
+.sortItemActive {
+  color: #2563eb;
+  font-weight: 600;
+  background: #eff6ff;
+}
+.sortItemActive:hover {
+  background: #dbeafe;
+}
