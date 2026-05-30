@@ -187,6 +187,7 @@ export interface Schedule {
   end_time: string;
   duration_minutes: number;
   timezone: string;
+  slot: number;   // ← tambahkan ini
   service_type: { id: number; name: string };
   service_name: { id: number; name: string };
   room_type: { id: number; name: string };

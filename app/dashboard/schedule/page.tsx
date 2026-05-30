@@ -522,14 +522,17 @@ export default function SchedulePage() {
                   <div className="card border-0 shadow-sm border-start border-primary border-4 h-100">
                     <div className="card-body">
                       {/* Waktu & durasi */}
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <span className="badge bg-primary">
-                          {sch.start_time} – {sch.end_time} {sch.timezone}
-                        </span>
-                        <span className="badge bg-light text-secondary border" style={{ fontSize: 11 }}>
-                          {sch.duration_minutes} menit
-                        </span>
-                      </div>
+                      <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+  <span className="badge bg-primary">
+    {sch.start_time} – {sch.end_time} {sch.timezone}
+  </span>
+  <span className="badge bg-light text-secondary border" style={{ fontSize: 11 }}>
+    {sch.duration_minutes} menit
+  </span>
+  <span className="badge bg-success" style={{ fontSize: 11 }}>
+    {sch.slot} orang
+  </span>
+</div>
 
                       {/* Room */}
                       <p className="mb-1 small">
