@@ -278,7 +278,7 @@ export default function Dashboard() {
     <>
       <div className="dash-root">
         <div className="dash-header">
-          <div className="dash-header-left">
+          <div>
             <div className="dash-header-eyebrow">
               <span className="dash-dot" />
               Panel Admin Aktif
@@ -435,6 +435,42 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Jam Operasional */}
+        {profile?.branch?.operational_hours &&
+          Object.keys(profile.branch.operational_hours).length > 0 && (
+            <div className="dash-hours-card">
+              <div className="dash-info-header">
+                <Clock size={16} />
+                <span>Jam Operasional</span>
+              </div>
+              <div className="dash-hours-grid">
+                {DAYS.map((day) => {
+                  const h = profile?.branch?.operational_hours?.[day];
+                  if (!h) return null;
+                  return (
+                    <div
+                      key={day}
+                      className={`dash-hours-item${
+                        h.isClosed ? " closed" : ""
+                      }`}
+                    >
+                      <p className="dash-hours-day">
+                        {day.charAt(0).toUpperCase() + day.slice(1)}
+                      </p>
+                      {h.isClosed ? (
+                        <p className="dash-hours-closed-label">Libur</p>
+                      ) : (
+                        <p className="dash-hours-time">
+                          {h.open} – {h.close}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
       </div>
 
       {showModal && form && (
