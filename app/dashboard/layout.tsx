@@ -12,6 +12,7 @@ import {
   FiHome,
   FiLogOut,
   FiMapPin,
+  FiClipboard,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { name: "Service", path: "/dashboard/service", icon: FiSettings },
   { name: "Membership", path: "/dashboard/member", icon: FiCreditCard },
   { name: "Schedule", path: "/dashboard/schedule", icon: FiCalendar },
+  { name: "Booking", path: "/dashboard/booking", icon: FiClipboard },
   { name: "Staff", path: "/dashboard/staff", icon: FiUsers },
   { name: "Room", path: "/dashboard/room", icon: FiHome },
 ];
@@ -53,7 +55,7 @@ export default function DashboardLayout({
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
@@ -212,12 +214,10 @@ export default function DashboardLayout({
           display: flex;
           min-height: 100vh;
         }
-      `}</style>
+      `}} />
 
       <div className="layout-wrapper">
-        {/* Sidebar */}
         <aside className="sidebar">
-          {/* Logo */}
           <div className="sidebar-logo">
             <Image
               src="/images/logo_activelab.png"
@@ -228,7 +228,6 @@ export default function DashboardLayout({
             />
           </div>
 
-          {/* Nav */}
           <nav className="nav-section">
             <p className="nav-label">Menu Utama</p>
             {NAV_ITEMS.map((item) => {
@@ -251,7 +250,6 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          {/* Footer buttons */}
           <div className="sidebar-footer">
             <button onClick={handleKelolaCabang} className="btn-branch">
               <FiMapPin size={15} />
@@ -264,7 +262,6 @@ export default function DashboardLayout({
           </div>
         </aside>
 
-        {/* Main */}
         <main className="main-content">{children}</main>
       </div>
     </>
