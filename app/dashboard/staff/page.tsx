@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import {
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+  FiX,
+  FiAlertTriangle,
+  FiUsers,
+} from "react-icons/fi";
 import { Camera } from "lucide-react";
-import { Spinner } from "react-bootstrap";
 import { staffAPI, Staff, getStaffPhotoUrl } from "../../lib/api";
+import "./staff.css";
 
-// Placeholder kalau tidak ada foto
 const PLACEHOLDER = "/images/logo_activelab.png";
 
 interface ModalState {
@@ -42,13 +48,20 @@ const defaultModal: ModalState = {
   error: "",
 };
 
+/* Spinner */
+const Spinner = ({ size = 28 }: { size?: number }) => (
+  <div
+    className="st-spinner"
+    style={{ width: size, height: size, borderWidth: size < 20 ? 2 : 3 }}
+  />
+);
+
 export default function StaffManagementPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
 
   const [modal, setModal] = useState<ModalState>(defaultModal);
-
   const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
     isOpen: false,
     staffId: 0,
@@ -59,7 +72,6 @@ export default function StaffManagementPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch data staff
   const fetchStaff = useCallback(async () => {
     setIsLoading(true);
     setPageError("");
@@ -79,10 +91,8 @@ export default function StaffManagementPage() {
     fetchStaff();
   }, [fetchStaff]);
 
-  // Buka modal tambah
-  const openAddModal = () => {
+  const openAddModal = () =>
     setModal({ ...defaultModal, isOpen: true, type: "add" });
-  };
 
   const openEditModal = (staff: Staff) => {
     setModal({
@@ -99,11 +109,9 @@ export default function StaffManagementPage() {
     });
   };
 
-  // Handler pilih file gambar
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       setModal((prev) => ({
@@ -116,7 +124,6 @@ export default function StaffManagementPage() {
       setModal((prev) => ({ ...prev, error: "Ukuran foto maksimal 2MB." }));
       return;
     }
-
     const previewUrl = URL.createObjectURL(file);
     setModal((prev) => ({
       ...prev,
@@ -126,27 +133,18 @@ export default function StaffManagementPage() {
     }));
   };
 
-  // Hapus pilihan foto
-  const handleRemoveImage = (staff?: Staff) => {
-    setModal((prev) => ({
-      ...prev,
-      imageFile: null,
-      imagePreview: staff ? getStaffPhotoUrl(staff.image) || "" : "",
-    }));
+  const handleRemoveImage = () => {
+    setModal((prev) => ({ ...prev, imageFile: null, imagePreview: "" }));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Submit form (tambah/edit)
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!modal.inputName.trim()) {
       setModal((prev) => ({ ...prev, error: "Nama staff wajib diisi" }));
       return;
     }
-
     setModal((prev) => ({ ...prev, isLoading: true, error: "" }));
-
     try {
       const payload = {
         name: modal.inputName.trim(),
@@ -154,7 +152,6 @@ export default function StaffManagementPage() {
         description: modal.inputDescription.trim(),
         imageFile: modal.imageFile,
       };
-
       if (modal.type === "add") {
         const res = await staffAPI.create(payload);
         setStaffList((prev) => [res.data, ...prev]);
@@ -164,7 +161,6 @@ export default function StaffManagementPage() {
           prev.map((s) => (s.id === modal.staffId ? res.data : s))
         );
       }
-
       setModal(defaultModal);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
@@ -172,7 +168,6 @@ export default function StaffManagementPage() {
     }
   };
 
-  // Buka modal konfirmasi hapus
   const openDeleteModal = (id: number, name: string) => {
     setDeleteModal({
       isOpen: true,
@@ -183,7 +178,6 @@ export default function StaffManagementPage() {
     });
   };
 
-  // Konfirmasi hapus
   const confirmDelete = async () => {
     setDeleteModal((prev) => ({ ...prev, isLoading: true, error: "" }));
     try {
@@ -197,164 +191,114 @@ export default function StaffManagementPage() {
     }
   };
 
-  // Render loading
   if (isLoading) {
     return (
-      <div className="container py-5 text-center">
-        <Spinner animation="border" variant="primary" />
-        <p className="text-muted mt-2">Memuat data staff...</p>
+      <div className="st-page">
+        <div className="st-loading">
+          <Spinner />
+          <p className="st-loading-text">Memuat data staff...</p>
+        </div>
       </div>
     );
   }
 
   if (pageError) {
     return (
-      <div className="container py-4">
-        <div className="alert alert-danger">
-          {pageError}
-          <button
-            className="btn btn-sm btn-outline-danger ms-3"
-            onClick={fetchStaff}
-          >
-            Coba Lagi
-          </button>
+      <div className="st-page">
+        <div className="st-alert st-alert-danger">
+          <FiAlertTriangle size={16} style={{ flexShrink: 0 }} />
+          <span>
+            {pageError}{" "}
+            <button
+              className="st-btn st-btn-sm st-btn-light"
+              style={{ marginLeft: 8 }}
+              onClick={fetchStaff}
+            >
+              Coba Lagi
+            </button>
+          </span>
         </div>
       </div>
     );
   }
 
-  // RENDER UTAMA
   return (
-    <div className="container py-4">
+    <div className="st-page">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h4 className="m-0 fw-bold">Staff Management</h4>
-          <p className="text-muted small mb-0">
-            {staffList.length} staff terdaftar
-          </p>
+      <div className="st-header">
+        <div className="st-header-left">
+          <h1>Staff Management</h1>
+          <p>{staffList.length} staff terdaftar</p>
         </div>
-        <button
-          className="btn btn-primary d-flex align-items-center gap-2"
-          onClick={openAddModal}
-        >
-          <FiPlus /> Tambah Staff
+        <button className="st-btn st-btn-primary" onClick={openAddModal}>
+          <FiPlus size={15} /> Tambah Staff
         </button>
       </div>
 
-      {/* Tabel staff */}
-      <div className="card border-0 shadow-sm rounded overflow-hidden">
-        <div className="table-responsive">
-          <table className="table align-middle mb-0" style={{ minWidth: 800 }}>
-            <thead className="table-light">
+      {/* Tabel */}
+      <div className="st-table-card">
+        <div style={{ overflowX: "auto" }}>
+          <table className="st-table">
+            <thead>
               <tr>
-                <th className="ps-4 py-3" style={{ width: 70 }}>
-                  Foto
-                </th>
-                <th className="py-3" style={{ width: 200 }}>
-                  Nama Staff
-                </th>
-                <th className="py-3" style={{ width: 160 }}>
-                  Kontak
-                </th>
-                <th className="py-3">Deskripsi</th>
-                <th className="py-3 text-center pe-4" style={{ width: 120 }}>
-                  Aksi
-                </th>
+                <th style={{ width: 64 }}>Foto</th>
+                <th style={{ width: 200 }}>Nama Staff</th>
+                <th style={{ width: 160 }}>Kontak</th>
+                <th>Deskripsi</th>
+                <th style={{ width: 110 }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-5 text-muted">
-                    <div className="d-flex flex-column align-items-center gap-2">
-                      <svg
-                        width="40"
-                        height="40"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#adb5bd"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                      <span>
-                        Belum ada data staff. Tambahkan staff pertama!
-                      </span>
+                  <td colSpan={5}>
+                    <div className="st-empty">
+                      <div className="st-empty-icon">
+                        <FiUsers size={26} color="#9ca3af" />
+                      </div>
+                      <p className="st-empty-title">Belum ada data staff</p>
+                      <p className="st-empty-desc">
+                        Tambahkan staff pertama untuk memulai.
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 staffList.map((staff) => (
                   <tr key={staff.id}>
-                    <td className="ps-4">
+                    <td>
                       <img
                         src={getStaffPhotoUrl(staff.image) || PLACEHOLDER}
                         alt={staff.name}
-                        style={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          border: "2px solid #e9ecef",
-                        }}
+                        className="st-avatar"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = PLACEHOLDER;
                         }}
                       />
                     </td>
-
-                    {/* Nama */}
                     <td>
-                      <span className="fw-semibold" style={{ color: "#333" }}>
-                        {staff.name}
-                      </span>
-                      <div className="text-muted" style={{ fontSize: 11 }}>
-                        ID #{staff.id}
+                      <div className="st-name-cell">
+                        <span className="st-name">{staff.name}</span>
+                        <span className="st-id">ID #{staff.id}</span>
                       </div>
                     </td>
-
-                    {/* Kontak */}
                     <td>
-                      <span className="text-secondary">
-                        {staff.contact || "-"}
-                      </span>
+                      <span className="st-contact">{staff.contact || "—"}</span>
                     </td>
-
-                    {/* Deskripsi */}
                     <td>
-                      <p
-                        className="text-muted m-0"
-                        style={{
-                          fontSize: 14,
-                          maxWidth: 380,
-                          overflow: "hidden",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                        }}
-                      >
-                        {staff.description || "-"}
-                      </p>
+                      <p className="st-desc">{staff.description || "—"}</p>
                     </td>
-
-                    {/* Aksi */}
-                    <td className="text-center pe-4">
-                      <div className="d-flex justify-content-center gap-2">
+                    <td>
+                      <div className="st-actions">
                         <button
-                          className="btn btn-sm btn-outline-primary rounded-circle p-2 d-flex align-items-center"
+                          className="st-btn-icon st-btn-icon-edit"
                           title="Edit"
                           onClick={() => openEditModal(staff)}
                         >
                           <FiEdit2 size={14} />
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger rounded-circle p-2 d-flex align-items-center"
+                          className="st-btn-icon st-btn-icon-delete"
                           title="Hapus"
                           onClick={() => openDeleteModal(staff.id, staff.name)}
                         >
@@ -370,79 +314,66 @@ export default function StaffManagementPage() {
         </div>
       </div>
 
+      {/* ══════════════════════════════════════════════
+      Tambah / Edit
+      ══════════════════════════════════════════════ */}
       {modal.isOpen && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
+          className="st-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !modal.isLoading)
+              setModal(defaultModal);
+          }}
         >
-          <div
-            className="bg-white rounded shadow"
-            style={{ width: 520, maxHeight: "90vh", overflowY: "auto" }}
-          >
-            {/* Header modal */}
-            <div className="px-4 pt-4 pb-3 border-bottom">
-              <h5 className="fw-bold mb-0">
-                {modal.type === "add" ? "Tambah Data Staff" : "Ubah Data Staff"}
-              </h5>
+          <div className="st-modal">
+            <div className="st-modal-header">
+              <h2 className="st-modal-title">
+                {modal.type === "add" ? (
+                  <>
+                    <FiPlus size={16} /> Tambah Data Staff
+                  </>
+                ) : (
+                  <>
+                    <FiEdit2 size={16} /> Ubah Data Staff
+                  </>
+                )}
+              </h2>
+              <button
+                className="st-modal-close"
+                onClick={() => !modal.isLoading && setModal(defaultModal)}
+              >
+                <FiX size={15} />
+              </button>
             </div>
 
-            <form onSubmit={handleSave}>
-              <div className="p-4">
-                {/* Alert error */}
+            <form onSubmit={handleSave} style={{ display: "contents" }}>
+              <div className="st-modal-body">
                 {modal.error && (
-                  <div className="alert alert-danger py-2 small mb-3">
+                  <div className="st-alert st-alert-danger">
+                    <FiAlertTriangle size={15} style={{ flexShrink: 0 }} />
                     {modal.error}
                   </div>
                 )}
 
-                {/* Upload Foto Staff*/}
-                <div className="mb-4">
-                  <label
-                    className="form-label fw-semibold"
-                    style={{ fontSize: 14 }}
-                  >
-                    Foto Staff
-                  </label>
-
-                  {/* Area upload foto */}
-                  <div className="d-flex align-items-center gap-4">
-                    <div style={{ position: "relative", flexShrink: 0 }}>
+                {/* Upload Foto */}
+                <div className="st-form-group">
+                  <label className="st-label">Foto Staff</label>
+                  <div className="st-photo-upload">
+                    <div className="st-photo-preview-wrap">
                       <img
                         src={modal.imagePreview || PLACEHOLDER}
                         alt="Preview"
-                        style={{
-                          width: 100,
-                          height: 100,
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          border: "3px solid #e9ecef",
-                          background: "#f8f9fa",
-                        }}
+                        className="st-photo-preview"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = PLACEHOLDER;
                         }}
                       />
-                      {/* Tombol kamera untuk trigger input file */}
                       <label
                         htmlFor="staff-image-upload"
+                        className="st-photo-camera-btn"
                         title="Ganti foto"
-                        style={{
-                          position: "absolute",
-                          bottom: 0,
-                          right: 0,
-                          width: 34,
-                          height: 34,
-                          borderRadius: "50%",
-                          background: "#0d6efd",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          color: "#fff",
-                          border: "2px solid white",
-                        }}
                       >
-                        <Camera size={16} />
+                        <Camera size={14} />
                       </label>
                       <input
                         id="staff-image-upload"
@@ -454,30 +385,26 @@ export default function StaffManagementPage() {
                         disabled={modal.isLoading}
                       />
                     </div>
-
-                    {/* Info & aksi foto */}
-                    <div className="flex-grow-1">
-                      <p className="mb-1 fw-semibold" style={{ fontSize: 13 }}>
-                        Upload Foto Staff
-                      </p>
-                      <p className="text-muted mb-2" style={{ fontSize: 12 }}>
+                    <div className="st-photo-info">
+                      <p className="st-photo-title">Upload Foto Staff</p>
+                      <p className="st-photo-hint">
                         Format: JPG, PNG, WebP. Maks. 2MB.
                       </p>
-
                       {modal.imageFile ? (
-                        // Setelah pilih file baru
-                        <div className="d-flex align-items-center gap-2 flex-wrap">
-                          <span
-                            className="badge bg-success"
-                            style={{ fontSize: 11 }}
-                          >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <span className="st-photo-file-badge">
                             ✓ {modal.imageFile.name}
                           </span>
                           <button
                             type="button"
-                            className="btn btn-sm btn-outline-secondary py-0"
-                            style={{ fontSize: 11 }}
-                            onClick={() => handleRemoveImage()}
+                            className="st-btn st-btn-sm st-btn-light"
+                            onClick={handleRemoveImage}
                             disabled={modal.isLoading}
                           >
                             Batalkan
@@ -486,8 +413,8 @@ export default function StaffManagementPage() {
                       ) : (
                         <label
                           htmlFor="staff-image-upload"
-                          className="btn btn-sm btn-outline-primary"
-                          style={{ cursor: "pointer", fontSize: 12 }}
+                          className="st-btn st-btn-sm st-btn-light"
+                          style={{ cursor: "pointer" }}
                         >
                           Pilih Foto
                         </label>
@@ -496,17 +423,14 @@ export default function StaffManagementPage() {
                   </div>
                 </div>
 
-                {/* Input Nama */}
-                <div className="mb-3">
-                  <label
-                    className="form-label fw-semibold"
-                    style={{ fontSize: 14 }}
-                  >
-                    Nama Staff <span className="text-danger">*</span>
+                {/* Nama */}
+                <div className="st-form-group">
+                  <label className="st-label">
+                    Nama Staff <span className="st-required">*</span>
                   </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="st-input"
                     placeholder="Contoh: Andi Wijaya"
                     value={modal.inputName}
                     onChange={(e) =>
@@ -521,17 +445,12 @@ export default function StaffManagementPage() {
                   />
                 </div>
 
-                {/* Input Kontak */}
-                <div className="mb-3">
-                  <label
-                    className="form-label fw-semibold"
-                    style={{ fontSize: 14 }}
-                  >
-                    Kontak / No. HP
-                  </label>
+                {/* Kontak */}
+                <div className="st-form-group">
+                  <label className="st-label">Kontak / No. HP</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="st-input"
                     placeholder="Contoh: 08123456789"
                     value={modal.inputContact}
                     onChange={(e) =>
@@ -544,16 +463,11 @@ export default function StaffManagementPage() {
                   />
                 </div>
 
-                {/* Input Deskripsi  */}
-                <div className="mb-4">
-                  <label
-                    className="form-label fw-semibold"
-                    style={{ fontSize: 14 }}
-                  >
-                    Deskripsi / Bio
-                  </label>
+                {/* Deskripsi */}
+                <div className="st-form-group" style={{ marginBottom: 0 }}>
+                  <label className="st-label">Deskripsi / Bio</label>
                   <textarea
-                    className="form-control"
+                    className="st-textarea"
                     rows={3}
                     placeholder="Ceritakan singkat mengenai latar belakang staff..."
                     value={modal.inputDescription}
@@ -568,11 +482,10 @@ export default function StaffManagementPage() {
                 </div>
               </div>
 
-              {/* Footer modal */}
-              <div className="px-4 pb-4 d-flex justify-content-end gap-2">
+              <div className="st-modal-footer">
                 <button
                   type="button"
-                  className="btn btn-light border px-4"
+                  className="st-btn st-btn-light"
                   onClick={() => setModal(defaultModal)}
                   disabled={modal.isLoading}
                 >
@@ -580,18 +493,13 @@ export default function StaffManagementPage() {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary px-4"
+                  className="st-btn st-btn-primary"
                   disabled={modal.isLoading}
                 >
                   {modal.isLoading ? (
                     <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        className="me-2"
-                      />
-                      Menyimpan...
+                      <Spinner size={14} />
+                      &nbsp;Menyimpan...
                     </>
                   ) : modal.type === "add" ? (
                     "Tambah Staff"
@@ -605,49 +513,49 @@ export default function StaffManagementPage() {
         </div>
       )}
 
-      {/* KONFIRMASI HAPUS*/}
+      {/* ══════════════════════════════════════════════
+        Konfirmasi Hapus
+      ══════════════════════════════════════════════ */}
       {deleteModal.isOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
-        >
-          <div
-            className="bg-white p-4 rounded shadow-sm border"
-            style={{ width: 400 }}
-          >
-            {/* Ikon danger */}
+        <div className="st-modal-backdrop">
+          <div className="st-modal st-modal-sm">
             <div
-              className="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3"
-              style={{ width: 60, height: 60 }}
+              className="st-modal-body"
+              style={{ padding: "32px 28px 20px", textAlign: "center" }}
             >
-              <FiTrash2 size={26} color="#dc3545" />
-            </div>
-
-            <h5 className="fw-bold text-center mb-2">Hapus Staff?</h5>
-
-            {deleteModal.error && (
-              <div className="alert alert-danger py-2 small mb-3">
-                {deleteModal.error}
+              <div className="st-confirm-icon st-confirm-icon-danger">
+                <FiTrash2 size={26} color="var(--st-danger)" />
               </div>
-            )}
-
-            <p
-              className="text-secondary text-center mb-1"
-              style={{ fontSize: 15 }}
-            >
-              Anda yakin ingin menghapus staff
-            </p>
-            <p className="fw-semibold text-center mb-3">
-              &ldquo;{deleteModal.targetName}&rdquo;?
-            </p>
-
-            <div className="alert alert-warning py-2 small">
-              ⚠️ Foto staff juga akan dihapus secara permanen.
+              <p className="st-confirm-title">Hapus Staff?</p>
+              <p className="st-confirm-name">
+                &ldquo;{deleteModal.targetName}&rdquo;
+              </p>
+              <p className="st-confirm-desc">
+                Tindakan ini tidak bisa dibatalkan.
+              </p>
+              {deleteModal.error && (
+                <div
+                  className="st-alert st-alert-danger"
+                  style={{ marginTop: 14, textAlign: "left" }}
+                >
+                  <FiAlertTriangle size={14} />
+                  {deleteModal.error}
+                </div>
+              )}
+              <div
+                className="st-alert st-alert-warning"
+                style={{ marginTop: 14, textAlign: "left" }}
+              >
+                <FiAlertTriangle size={14} style={{ flexShrink: 0 }} />
+                Foto staff juga akan dihapus secara permanen.
+              </div>
             </div>
-
-            <div className="d-flex justify-content-center gap-2 mt-3">
+            <div
+              className="st-modal-footer"
+              style={{ justifyContent: "center" }}
+            >
               <button
-                className="btn btn-light border px-4"
+                className="st-btn st-btn-light"
                 onClick={() =>
                   setDeleteModal((prev) => ({ ...prev, isOpen: false }))
                 }
@@ -656,19 +564,14 @@ export default function StaffManagementPage() {
                 Batal
               </button>
               <button
-                className="btn btn-danger px-4"
+                className="st-btn st-btn-danger"
                 onClick={confirmDelete}
                 disabled={deleteModal.isLoading}
               >
                 {deleteModal.isLoading ? (
                   <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      className="me-2"
-                    />
-                    Menghapus...
+                    <Spinner size={14} />
+                    &nbsp;Menghapus...
                   </>
                 ) : (
                   "Ya, Hapus"
