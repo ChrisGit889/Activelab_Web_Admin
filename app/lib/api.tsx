@@ -786,3 +786,27 @@ export const scheduleAPI = {
     return data;
   },
 };
+
+export const chatAPI = {
+  getThreads: async () => {
+    const response = await fetch('http://localhost:5000/api/chats/threads', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Gagal memuat daftar chat dari server');
+    return response.json();
+  },
+
+  getMessages: async (clientId: string) => {
+    const response = await fetch(`http://localhost:5000/api/chats/messages/${clientId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Gagal memuat isi pesan dari server');
+    return response.json();
+  }
+};
