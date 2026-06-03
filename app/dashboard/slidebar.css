@@ -1,0 +1,318 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap');
+
+*, *::before, *::after {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #f0f4f8;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 256px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  background: #07111f;
+  border-right: 1px solid rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+
+/* Subtle ambient glow overlay */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,132,255,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(14,74,190,0.14) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Vertical accent line on left edge */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent 0%, rgba(56,132,255,0.6) 40%, rgba(56,132,255,0.2) 100%);
+  z-index: 1;
+}
+
+/* ── Logo Area ── */
+.sidebar-logo {
+  position: relative;
+  z-index: 2;
+  padding: 28px 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-img-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-text-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.logo-text-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+  margin: 0 16px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Nav Section ── */
+.nav-section {
+  padding: 16px 12px;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.nav-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  padding: 0 8px 10px;
+}
+
+/* ── Nav Item ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 1px;
+  position: relative;
+  letter-spacing: 0.01em;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+}
+
+.nav-item.active {
+  background: rgba(56,132,255,0.16);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Active indicator pill */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ── Nav Icon Box ── */
+.nav-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nav-item:hover .nav-icon {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.nav-item.active .nav-icon {
+  background: rgba(59,130,246,0.3);
+  border-color: rgba(59,130,246,0.35);
+}
+
+/* ── Sidebar Footer ── */
+.sidebar-footer {
+  position: relative;
+  z-index: 2;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.footer-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  padding: 0 4px 6px;
+}
+
+/* Branch Button */
+.btn-branch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(251,191,36,0.2);
+  background: rgba(251,191,36,0.07);
+  color: #fbbf24;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  width: 100%;
+  letter-spacing: 0.01em;
+}
+
+.btn-branch:hover {
+  background: rgba(251,191,36,0.14);
+  border-color: rgba(251,191,36,0.35);
+}
+
+.btn-branch-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(251,191,36,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Logout Button */
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(239,68,68,0.15);
+  background: rgba(239,68,68,0.06);
+  color: #f87171;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  width: 100%;
+  letter-spacing: 0.01em;
+}
+
+.btn-logout:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.btn-logout-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(239,68,68,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Main Content ── */
+.main-content {
+  flex: 1;
+  background: #f0f4f8;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Version Badge ── */
+.version-badge {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px 14px;
+}
+
+.version-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.06em;
+}
+
+.version-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  flex-shrink: 0;
+}
