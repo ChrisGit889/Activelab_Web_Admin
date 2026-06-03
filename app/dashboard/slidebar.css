@@ -316,3 +316,7 @@
   box-shadow: 0 0 6px #22c55e;
   flex-shrink: 0;
 }
+
+.logo-img-wrap img {
+  filter: brightness(0) invert(1) opacity(0.9);
+}
