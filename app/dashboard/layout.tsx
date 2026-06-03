@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -12,17 +11,19 @@ import {
   FiHome,
   FiLogOut,
   FiMapPin,
-  FiClipboard,
+  FiCheckCircle, // Menambahkan icon baru untuk Check-in/Check-out
 } from "react-icons/fi";
 
+// Mengisi semua properti icon agar konsisten dan menghindari error 'undefined'
 const NAV_ITEMS = [
   { name: "Dashboard", path: "/dashboard", icon: FiGrid },
   { name: "Service", path: "/dashboard/service", icon: FiSettings },
   { name: "Membership", path: "/dashboard/member", icon: FiCreditCard },
   { name: "Schedule", path: "/dashboard/schedule", icon: FiCalendar },
-  { name: "Booking", path: "/dashboard/booking", icon: FiClipboard },
   { name: "Staff", path: "/dashboard/staff", icon: FiUsers },
   { name: "Room", path: "/dashboard/room", icon: FiHome },
+  { name: "Check-in", path: "/dashboard/checkin", icon: FiCheckCircle },
+  { name: "Check-out", path: "/dashboard/checkout", icon: FiLogOut },
 ];
 
 export default function DashboardLayout({
@@ -55,7 +56,7 @@ export default function DashboardLayout({
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
@@ -71,8 +72,19 @@ export default function DashboardLayout({
           flex-shrink: 0;
         }
 
+        .sidebar::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+          pointer-events: none;
+        }
+
         .sidebar-logo {
-          padding: 28px 16px 22px;
+          padding: 28px 20px 20px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -81,8 +93,7 @@ export default function DashboardLayout({
         }
 
         .sidebar-logo img {
-          filter: brightness(0) invert(1);
-          opacity: 0.95;
+          filter: brightness(1.1);
         }
 
         .nav-section {
@@ -214,20 +225,23 @@ export default function DashboardLayout({
           display: flex;
           min-height: 100vh;
         }
-      `}} />
+      `}</style>
 
       <div className="layout-wrapper">
+        {/* Sidebar */}
         <aside className="sidebar">
+          {/* Logo */}
           <div className="sidebar-logo">
             <Image
               src="/images/logo_activelab.png"
               alt="Logo ActiveLab"
-              width={700}
-              height={100}
+              width={90}
+              height={90}
               style={{ objectFit: "contain" }}
             />
           </div>
 
+          {/* Nav */}
           <nav className="nav-section">
             <p className="nav-label">Menu Utama</p>
             {NAV_ITEMS.map((item) => {
@@ -242,7 +256,8 @@ export default function DashboardLayout({
                   className={`nav-item ${isActive ? "active" : ""}`}
                 >
                   <span className="nav-icon">
-                    <Icon size={16} />
+                    {/* Menggunakan kondisional rendering agar aman dari tipe data 'undefined' */}
+                    {Icon && <Icon size={16} />}
                   </span>
                   {item.name}
                 </Link>
@@ -250,6 +265,7 @@ export default function DashboardLayout({
             })}
           </nav>
 
+          {/* Footer buttons */}
           <div className="sidebar-footer">
             <button onClick={handleKelolaCabang} className="btn-branch">
               <FiMapPin size={15} />
@@ -262,6 +278,7 @@ export default function DashboardLayout({
           </div>
         </aside>
 
+        {/* Main */}
         <main className="main-content">{children}</main>
       </div>
     </>
