@@ -91,10 +91,12 @@ export default function StaffManagementPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
-  const [activeClient, setActiveClient] = useState<ClientChatThread | null>(null);
+  const [activeClient, setActiveClient] = useState<ClientChatThread | null>(
+    null
+  );
   const [typeMessage, setTypeMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const [clients, setClients] = useState<ClientChatThread[]>([]);
   const [activeChatHistory, setActiveChatHistory] = useState<ChatMessage[]>([]);
 
@@ -257,18 +259,18 @@ export default function StaffManagementPage() {
     if (!typeMessage.trim() || !activeClient) return;
 
     try {
-      await fetch('http://localhost:5000/api/chats/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("http://localhost:5000/api/chats/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clientId: activeClient.id,
           message: typeMessage.trim(),
-          isAdmin: true
-        })
+          isAdmin: true,
+        }),
       });
-      
+
       setTypeMessage("");
-      fetchMessagesForActiveClient(); 
+      fetchMessagesForActiveClient();
     } catch (err) {
       console.error("Gagal mengirim pesan ke database:", err);
     }
@@ -310,8 +312,16 @@ export default function StaffManagementPage() {
   }
 
   return (
-    <div className="st-page" style={{ position: "relative", overflowX: "hidden" }}>
-      <div style={{ marginRight: isChatPanelOpen ? "340px" : "0px", transition: "margin 0.3s ease" }}>
+    <div
+      className="st-page"
+      style={{ position: "relative", overflowX: "hidden" }}
+    >
+      <div
+        style={{
+          marginRight: isChatPanelOpen ? "340px" : "0px",
+          transition: "margin 0.3s ease",
+        }}
+      >
         <div className="st-header">
           <div className="st-header-left">
             <h1>Staff Management</h1>
@@ -369,7 +379,9 @@ export default function StaffManagementPage() {
                         </div>
                       </td>
                       <td>
-                        <span className="st-contact">{staff.contact || "—"}</span>
+                        <span className="st-contact">
+                          {staff.contact || "—"}
+                        </span>
                       </td>
                       <td>
                         <p className="st-desc">{staff.description || "—"}</p>
@@ -386,7 +398,9 @@ export default function StaffManagementPage() {
                           <button
                             className="st-btn-icon st-btn-icon-delete"
                             title="Hapus"
-                            onClick={() => openDeleteModal(staff.id, staff.name)}
+                            onClick={() =>
+                              openDeleteModal(staff.id, staff.name)
+                            }
                           >
                             <FiTrash2 size={14} />
                           </button>
@@ -402,7 +416,7 @@ export default function StaffManagementPage() {
       </div>
 
       {!isChatPanelOpen && (
-        <button 
+        <button
           onClick={() => setIsChatPanelOpen(true)}
           style={{
             position: "fixed",
@@ -421,18 +435,33 @@ export default function StaffManagementPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: "6px",
-            transition: "all 0.2s ease"
+            transition: "all 0.2s ease",
           }}
         >
           <FiMessageSquare size={20} />
-          <span style={{ fontSize: "10px", fontWeight: "bold", writingMode: "vertical-lr" }}>CHAT CLIENT</span>
-          {clients.some(c => c.unreadCount > 0) && (
-            <span style={{ width: "8px", height: "8px", backgroundColor: "#ff4d4f", borderRadius: "50%" }}></span>
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: "bold",
+              writingMode: "vertical-lr",
+            }}
+          >
+            CHAT CLIENT
+          </span>
+          {clients.some((c) => c.unreadCount > 0) && (
+            <span
+              style={{
+                width: "8px",
+                height: "8px",
+                backgroundColor: "#ff4d4f",
+                borderRadius: "50%",
+              }}
+            ></span>
           )}
         </button>
       )}
 
-      <div 
+      <div
         style={{
           position: "fixed",
           right: isChatPanelOpen ? "0" : "-340px",
@@ -445,26 +474,60 @@ export default function StaffManagementPage() {
           transition: "right 0.3s ease",
           display: "flex",
           flexDirection: "column",
-          borderLeft: "1px solid #e5e7eb"
+          borderLeft: "1px solid #e5e7eb",
         }}
       >
-        <div style={{ padding: "20px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            padding: "20px 16px",
+            borderBottom: "1px solid #f3f4f6",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <FiMessageSquare color="#4285F4" size={18} />
-            <h3 style={{ fontSize: "16px", fontWeight: "bold", margin: 0, color: "#1f2937" }}>Daftar Pesan Client</h3>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "bold",
+                margin: 0,
+                color: "#1f2937",
+              }}
+            >
+              Daftar Pesan Client
+            </h3>
           </div>
-          <button 
-            onClick={() => { setIsChatPanelOpen(false); setActiveClient(null); }}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}
+          <button
+            onClick={() => {
+              setIsChatPanelOpen(false);
+              setActiveClient(null);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#9ca3af",
+            }}
           >
             <FiX size={18} />
           </button>
         </div>
 
         <div style={{ padding: "12px 16px", backgroundColor: "#f9fafb" }}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-            <FiSearch style={{ position: "absolute", left: "10px", color: "#9ca3af" }} size={14} />
-            <input 
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <FiSearch
+              style={{ position: "absolute", left: "10px", color: "#9ca3af" }}
+              size={14}
+            />
+            <input
               type="text"
               placeholder="Cari nama client..."
               value={searchQuery}
@@ -477,7 +540,7 @@ export default function StaffManagementPage() {
                 borderRadius: "8px",
                 outline: "none",
                 backgroundColor: "#ffffff",
-                color: "#1f2937"
+                color: "#1f2937",
               }}
             />
           </div>
@@ -485,34 +548,98 @@ export default function StaffManagementPage() {
 
         <div style={{ flex: 1, overflowY: "auto" }}>
           {filteredClients.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "13px", marginTop: "32px" }}>Tidak ada chat ditemukan</p>
+            <p
+              style={{
+                textAlign: "center",
+                color: "#9ca3af",
+                fontSize: "13px",
+                marginTop: "32px",
+              }}
+            >
+              Tidak ada chat ditemukan
+            </p>
           ) : (
             filteredClients.map((client) => (
-              <div 
+              <div
                 key={client.id}
                 onClick={() => setActiveClient(client)}
                 style={{
                   padding: "14px 16px",
                   borderBottom: "1px solid #f9fafb",
                   cursor: "pointer",
-                  backgroundColor: activeClient?.id === client.id ? "#eff6ff" : "transparent",
+                  backgroundColor:
+                    activeClient?.id === client.id ? "#eff6ff" : "transparent",
                   display: "flex",
                   gap: "12px",
-                  transition: "background 0.2s ease"
+                  transition: "background 0.2s ease",
                 }}
               >
-                <div style={{ width: "36px", height: "36px", backgroundColor: "#e0e7ff", borderRadius: "50%", display: "flex", alignItems: "center", flexShrink: 0, justifyContent: "center", color: "#4f46e5" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    backgroundColor: "#e0e7ff",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    justifyContent: "center",
+                    color: "#4f46e5",
+                  }}
+                >
                   <FiUser size={18} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
-                    <h4 style={{ fontSize: "13px", fontWeight: "bold", margin: 0, color: "#1f2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{client.name}</h4>
-                    <span style={{ fontSize: "10px", color: "#9ca3af" }}>{client.updatedAt}</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "bold",
+                        margin: 0,
+                        color: "#1f2937",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {client.name}
+                    </h4>
+                    <span style={{ fontSize: "10px", color: "#9ca3af" }}>
+                      {client.updatedAt}
+                    </span>
                   </div>
-                  <p style={{ fontSize: "12px", color: "#6b7280", margin: 0, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{client.lastMessage}</p>
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                      margin: 0,
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {client.lastMessage}
+                  </p>
                 </div>
                 {client.unreadCount > 0 && (
-                  <span style={{ backgroundColor: "#ff4d4f", color: "white", fontSize: "10px", fontWeight: "bold", padding: "2px 6px", borderRadius: "10px", alignSelf: "center" }}>
+                  <span
+                    style={{
+                      backgroundColor: "#ff4d4f",
+                      color: "white",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                      alignSelf: "center",
+                    }}
+                  >
                     {client.unreadCount}
                   </span>
                 )}
@@ -523,7 +650,7 @@ export default function StaffManagementPage() {
       </div>
 
       {activeClient && isChatPanelOpen && (
-        <div 
+        <div
           style={{
             position: "fixed",
             right: "330px",
@@ -532,66 +659,121 @@ export default function StaffManagementPage() {
             height: "460px",
             backgroundColor: "#ffffff",
             borderRadius: "12px",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            boxShadow:
+              "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
             zIndex: 102,
             border: "1px solid #e5e7eb",
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden"
+            overflow: "hidden",
           }}
         >
-          <div style={{ padding: "12px 16px", backgroundColor: "#4285F4", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#4285F4",
+              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
-              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "bold" }}>{activeClient.name}</h4>
-              <p style={{ margin: 0, fontSize: "11px", color: "#e0e7ff" }}>Percakapan Aktif Client</p>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "bold" }}>
+                {activeClient.name}
+              </h4>
+              <p style={{ margin: 0, fontSize: "11px", color: "#e0e7ff" }}>
+                Percakapan Aktif Client
+              </p>
             </div>
-            <button 
+            <button
               onClick={() => setActiveClient(null)}
-              style={{ background: "none", border: "none", color: "white", cursor: "pointer" }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
+              }}
             >
               <FiX size={16} />
             </button>
           </div>
 
-          <div style={{ flex: 1, padding: "16px", backgroundColor: "#f8fafc", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div
+            style={{
+              flex: 1,
+              padding: "16px",
+              backgroundColor: "#f8fafc",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
             {activeChatHistory.length === 0 ? (
-              <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "20px" }}>Belum ada riwayat obrolan</p>
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#9ca3af",
+                  fontSize: "12px",
+                  marginTop: "20px",
+                }}
+              >
+                Belum ada riwayat obrolan
+              </p>
             ) : (
               activeChatHistory.map((msg) => (
-                <div 
+                <div
                   key={msg.id}
                   style={{
                     alignSelf: msg.isAdmin ? "flex-end" : "flex-start",
                     maxWidth: "80%",
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: msg.isAdmin ? "flex-end" : "flex-start"
+                    alignItems: msg.isAdmin ? "flex-end" : "flex-start",
                   }}
                 >
-                  <div 
+                  <div
                     style={{
                       backgroundColor: msg.isAdmin ? "#4285F4" : "#ffffff",
                       color: msg.isAdmin ? "#ffffff" : "#1f2937",
                       padding: "8px 12px",
-                      borderRadius: msg.isAdmin ? "12px 12px 0 12px" : "12px 12px 12px 0",
+                      borderRadius: msg.isAdmin
+                        ? "12px 12px 0 12px"
+                        : "12px 12px 12px 0",
                       fontSize: "13px",
                       boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                      border: msg.isAdmin ? "none" : "1px solid #e5e7eb"
+                      border: msg.isAdmin ? "none" : "1px solid #e5e7eb",
                     }}
                   >
                     {msg.text}
                   </div>
-                  <span style={{ fontSize: "10px", color: "#9ca3af", marginTop: "2px", padding: "0 2px" }}>{msg.timestamp}</span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      color: "#9ca3af",
+                      marginTop: "2px",
+                      padding: "0 2px",
+                    }}
+                  >
+                    {msg.timestamp}
+                  </span>
                 </div>
               ))
             )}
           </div>
 
-          <form 
+          <form
             onSubmit={handleSendChat}
-            style={{ padding: "12px", borderTop: "1px solid #e5e7eb", display: "flex", gap: "8px", backgroundColor: "#ffffff" }}
+            style={{
+              padding: "12px",
+              borderTop: "1px solid #e5e7eb",
+              display: "flex",
+              gap: "8px",
+              backgroundColor: "#ffffff",
+            }}
           >
-            <input 
+            <input
               type="text"
               placeholder="Tulis balasan pesan..."
               value={typeMessage}
@@ -604,10 +786,10 @@ export default function StaffManagementPage() {
                 borderRadius: "20px",
                 outline: "none",
                 backgroundColor: "#f3f4f6",
-                color: "#1f2937"
+                color: "#1f2937",
               }}
             />
-            <button 
+            <button
               type="submit"
               style={{
                 backgroundColor: "#4285F4",
@@ -620,7 +802,7 @@ export default function StaffManagementPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                flexShrink: 0
+                flexShrink: 0,
               }}
             >
               <FiSend size={14} />
@@ -641,9 +823,13 @@ export default function StaffManagementPage() {
             <div className="st-modal-header">
               <h2 className="st-modal-title">
                 {modal.type === "add" ? (
-                  <><FiPlus size={16} /> Tambah Data Staff</>
+                  <>
+                    <FiPlus size={16} /> Tambah Data Staff
+                  </>
                 ) : (
-                  <><FiEdit2 size={16} /> Ubah Data Staff</>
+                  <>
+                    <FiEdit2 size={16} /> Ubah Data Staff
+                  </>
                 )}
               </h2>
               <button
@@ -694,10 +880,20 @@ export default function StaffManagementPage() {
                     </div>
                     <div className="st-photo-info">
                       <p className="st-photo-title">Upload Foto Staff</p>
-                      <p className="st-photo-hint">Format: JPG, PNG, WebP. Maks. 2MB.</p>
+                      <p className="st-photo-hint">
+                        Format: JPG, PNG, WebP. Maks. 2MB.
+                      </p>
                       {modal.imageFile ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span className="st-photo-file-badge">✓ {modal.imageFile.name}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <span className="st-photo-file-badge">
+                            ✓ {modal.imageFile.name}
+                          </span>
                           <button
                             type="button"
                             className="st-btn st-btn-sm st-btn-light"
@@ -721,13 +917,20 @@ export default function StaffManagementPage() {
                 </div>
 
                 <div className="st-form-group">
-                  <label className="st-label">Nama Staff <span className="st-required">*</span></label>
+                  <label className="st-label">
+                    Nama Staff <span className="st-required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="st-input"
                     placeholder="Contoh: Andi Wijaya"
                     value={modal.inputName}
-                    onChange={(e) => setModal((prev) => ({ ...prev, inputName: e.target.value }))}
+                    onChange={(e) =>
+                      setModal((prev) => ({
+                        ...prev,
+                        inputName: e.target.value,
+                      }))
+                    }
                     disabled={modal.isLoading}
                     required
                     autoFocus
@@ -741,7 +944,12 @@ export default function StaffManagementPage() {
                     className="st-input"
                     placeholder="Contoh: 08123456789"
                     value={modal.inputContact}
-                    onChange={(e) => setModal((prev) => ({ ...prev, inputContact: e.target.value }))}
+                    onChange={(e) =>
+                      setModal((prev) => ({
+                        ...prev,
+                        inputContact: e.target.value,
+                      }))
+                    }
                     disabled={modal.isLoading}
                   />
                 </div>
@@ -753,7 +961,12 @@ export default function StaffManagementPage() {
                     rows={3}
                     placeholder="Ceritakan singkat mengenai latar belakang staff..."
                     value={modal.inputDescription}
-                    onChange={(e) => setModal((prev) => ({ ...prev, inputDescription: e.target.value }))}
+                    onChange={(e) =>
+                      setModal((prev) => ({
+                        ...prev,
+                        inputDescription: e.target.value,
+                      }))
+                    }
                     disabled={modal.isLoading}
                   />
                 </div>
@@ -768,9 +981,16 @@ export default function StaffManagementPage() {
                 >
                   Batal
                 </button>
-                <button type="submit" className="st-btn st-btn-primary" disabled={modal.isLoading}>
+                <button
+                  type="submit"
+                  className="st-btn st-btn-primary"
+                  disabled={modal.isLoading}
+                >
                   {modal.isLoading ? (
-                    <><Spinner size={14} />&nbsp;Menyimpan...</>
+                    <>
+                      <Spinner size={14} />
+                      &nbsp;Menyimpan...
+                    </>
                   ) : modal.type === "add" ? (
                     "Tambah Staff"
                   ) : (
@@ -786,33 +1006,60 @@ export default function StaffManagementPage() {
       {deleteModal.isOpen && (
         <div className="st-modal-backdrop">
           <div className="st-modal st-modal-sm">
-            <div className="st-modal-body" style={{ padding: "32px 28px 20px", textAlign: "center" }}>
+            <div
+              className="st-modal-body"
+              style={{ padding: "32px 28px 20px", textAlign: "center" }}
+            >
               <div className="st-confirm-icon st-confirm-icon-danger">
                 <FiTrash2 size={26} color="var(--st-danger)" />
               </div>
               <p className="st-confirm-title">Hapus Staff?</p>
-              <p className="st-confirm-name">&ldquo;{deleteModal.targetName}&rdquo;</p>
-              <p className="st-confirm-desc">Tindakan ini tidak bisa dibatalkan.</p>
+              <p className="st-confirm-name">
+                &ldquo;{deleteModal.targetName}&rdquo;
+              </p>
+              <p className="st-confirm-desc">
+                Tindakan ini tidak bisa dibatalkan.
+              </p>
               {deleteModal.error && (
-                <div className="st-alert st-alert-danger" style={{ marginTop: 14, textAlign: "left" }}>
-                  <FiAlertTriangle size={14} />{deleteModal.error}
+                <div
+                  className="st-alert st-alert-danger"
+                  style={{ marginTop: 14, textAlign: "left" }}
+                >
+                  <FiAlertTriangle size={14} />
+                  {deleteModal.error}
                 </div>
               )}
-              <div className="st-alert st-alert-warning" style={{ marginTop: 14, textAlign: "left" }}>
-                <FiAlertTriangle size={14} style={{ flexShrink: 0 }} />Foto staff juga akan dihapus secara permanen.
+              <div
+                className="st-alert st-alert-warning"
+                style={{ marginTop: 14, textAlign: "left" }}
+              >
+                <FiAlertTriangle size={14} style={{ flexShrink: 0 }} />
+                Foto staff juga akan dihapus secara permanen.
               </div>
             </div>
-            <div className="st-modal-footer" style={{ justifyContent: "center" }}>
+            <div
+              className="st-modal-footer"
+              style={{ justifyContent: "center" }}
+            >
               <button
                 className="st-btn st-btn-light"
-                onClick={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() =>
+                  setDeleteModal((prev) => ({ ...prev, isOpen: false }))
+                }
                 disabled={deleteModal.isLoading}
               >
                 Batal
               </button>
-              <button className="st-btn st-btn-danger" onClick={confirmDelete} disabled={deleteModal.isLoading}>
+              <button
+                className="st-btn st-btn-danger"
+                onClick={confirmDelete}
+                disabled={deleteModal.isLoading}
+              >
                 {deleteModal.isLoading ? (
-                  <><Spinner size={14} />&nbsp;Menghapus...</>
+                  <>
+                    <Spinner size={14} />
+                    &nbsp;Menghapus...
+                  </>
                 ) : (
                   "Ya, Hapus"
                 )}
