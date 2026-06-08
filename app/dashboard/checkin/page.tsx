@@ -1,21 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Alert, Spinner } from "react-bootstrap";
-import { FiMaximize, FiCheck, FiX } from "react-icons/fi";
-import { io, Socket } from "socket.io-client";
-
-// Dynamically import QRCode karena butuh browser
-import dynamic from "next/dynamic";
-const QRCodeDisplay = dynamic(() => import("react-qr-code"), { ssr: false });
+import { useState } from "react";
+import { Spinner } from "react-bootstrap";
+import { FiCheck, FiX } from "react-icons/fi";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const BACKEND_BASE = API_URL?.replace("/api", "") || "http://localhost:5000";
 
 interface ScanResult {
   success: boolean;
-  scan_type?: string;
-  booking?: {
+  message?: string;
+  data?: {
     id: number;
     status: string;
     checkin_at: string;
@@ -28,229 +22,125 @@ interface ScanResult {
     service_name_name: string;
     room_name: string;
   };
-  message?: string;
 }
 
 export default function CheckInPage() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [scannerUrl, setScannerUrl] = useState<string | null>(null);
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [manualCode, setManualCode] = useState("");
-  const [isProcessingManual, setIsProcessingManual] = useState(false);
-  const [manualError, setManualError] = useState("");
+  const [code, setCode] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<ScanResult | null>(null);
 
-  // WebSocket connection
-  const connectSocket = useCallback((sid: string) => {
-    const newSocket = io(BACKEND_BASE, { transports: ["websocket"] });
-    newSocket.on("connect", () => {
-      newSocket.emit("join_session", sid);
-    });
-    newSocket.on("scan_result", (data: ScanResult) => {
-      setScanResult(data);
-    });
-    setSocket(newSocket);
-  }, []);
-
-  useEffect(() => {
-    return () => { socket?.disconnect(); };
-  }, [socket]);
-
-  // Buat scan session
-  const handleStartScan = async () => {
-    setIsCreatingSession(true);
-    setScanResult(null);
-    setManualCode("");
-    setManualError("");
+  const handleSubmit = async () => {
+    if (code.trim().length !== 6) return;
+    setIsProcessing(true);
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/admin/scan/sessions`, {
+      const res = await fetch(`${API_URL}/admin/scan/process`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ scan_type: "checkin" }),
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ code: code.trim().toUpperCase(), scan_type: "checkin" }),
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-
-      setSessionId(data.data.session_id);
-      setScannerUrl(data.data.scanner_url);
-      connectSocket(data.data.session_id);
-    } catch (err: unknown) {
-      console.error(err);
+      setResult(data);
+    } catch {
+      setResult({ success: false, message: "Gagal terhubung ke server" });
     } finally {
-      setIsCreatingSession(false);
+      setIsProcessing(false);
     }
   };
 
-  // Manual code submit
-  const handleManualSubmit = async () => {
-    if (!sessionId || !manualCode.trim()) return;
-    setIsProcessingManual(true);
-    setManualError("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/admin/scan/sessions/${sessionId}/process`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ manual_code: manualCode.trim().toUpperCase() }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Gagal memproses kode";
-      setManualError(msg);
-    } finally {
-      setIsProcessingManual(false);
-    }
-  };
-
-  const handleReset = () => {
-    socket?.disconnect();
-    setSocket(null);
-    setSessionId(null);
-    setScannerUrl(null);
-    setScanResult(null);
-    setManualCode("");
-    setManualError("");
+  const handleReset = () => { 
+    setResult(null); 
+    setCode(""); 
   };
 
   return (
     <div className="container-fluid py-4">
-      <h4 className="fw-bold mb-1">Scan Check-In</h4>
-      <p className="text-muted mb-4">Proses check-in member menggunakan QR code</p>
+      <h4 className="fw-bold mb-1">Check-In Member</h4>
+      <p className="text-muted mb-4">Input kode check-in dari member</p>
 
-      {/* ── Step 1: Mulai scan ─────────────────────────────────── */}
-      {!sessionId && !scanResult && (
-        <div className="card border-0 shadow-sm" style={{ maxWidth: 500 }}>
-          <div className="card-body p-4 text-center">
-            <div
-              className="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3"
-              style={{ width: 80, height: 80 }}
-            >
-              <FiMaximize size={36} color="#0d6efd" />
-            </div>
-            <h5 className="fw-bold mb-2">Mulai Scan Check-in</h5>
-            <p className="text-muted small mb-4">
-              Klik tombol di bawah, lalu scan QR yang muncul dengan HP admin untuk membuka scanner.
-            </p>
-            <button
-              className="btn btn-primary w-100"
-              onClick={handleStartScan}
-              disabled={isCreatingSession}
-            >
-              {isCreatingSession ? (
-                <><Spinner as="span" animation="border" size="sm" className="me-2" /> Menyiapkan...</>
-              ) : "Mulai Scan Check-in"}
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="card border-0 shadow-sm" style={{ maxWidth: 480 }}>
+        <div className="card-body p-4">
 
-      {/* ── Step 2: QR untuk HP admin + input manual ──────────── */}
-      {sessionId && !scanResult && (
-        <div className="row g-4">
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-4 text-center">
-                <p className="fw-semibold mb-1">Scan QR ini dengan HP Admin</p>
-                <p className="text-muted small mb-3">HP akan membuka halaman scanner</p>
-                {scannerUrl && (
-                  <div className="d-flex justify-content-center mb-3">
-                    <QRCodeDisplay value={scannerUrl} size={220} />
-                  </div>
-                )}
-                <p className="text-muted" style={{ fontSize: 11, wordBreak: "break-all" }}>
-                  {scannerUrl}
-                </p>
-                <div className="mt-2 d-flex align-items-center gap-2 justify-content-center">
-                  <Spinner animation="border" size="sm" variant="primary" />
-                  <span className="text-muted small">Menunggu scan dari HP admin...</span>
-                </div>
+          {!result ? (
+            <>
+              <p className="text-muted small mb-3">
+                Minta member menampilkan kode check-in di aplikasinya, lalu input di bawah.
+              </p>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Kode Check-In</label>
+                <input
+                  type="text"
+                  className="form-control text-uppercase text-center fw-bold"
+                  style={{ fontSize: 28, letterSpacing: "8px" }}
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+                  placeholder="XXXXXX"
+                  autoFocus
+                />
+                <div className="form-text">6 karakter — contoh: AX7K2P</div>
               </div>
-            </div>
-          </div>
 
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-4">
-                <h6 className="fw-bold mb-3">Input Kode Manual (Fallback)</h6>
-                <p className="text-muted small mb-3">
-                  Jika QR tidak bisa di-scan, minta user untuk memberikan kode 6 huruf mereka.
-                </p>
-                {manualError && (
-                  <Alert variant="danger" className="py-2 small">{manualError}</Alert>
-                )}
-                <div className="input-group mb-3">
-                  <input
-                    type="text"
-                    className="form-control text-uppercase"
-                    placeholder="Masukkan kode (contoh: AX7K2P)"
-                    maxLength={6}
-                    value={manualCode}
-                    onChange={(e) => setManualCode(e.target.value.toUpperCase())}
-                    style={{ letterSpacing: "4px", fontWeight: "bold", fontSize: 18 }}
-                  />
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleManualSubmit}
-                    disabled={isProcessingManual || manualCode.length !== 6}
-                  >
-                    {isProcessingManual ? <Spinner as="span" animation="border" size="sm" /> : "Proses"}
-                  </button>
-                </div>
+              <button
+                className="btn btn-primary w-100"
+                onClick={handleSubmit}
+                disabled={isProcessing || code.trim().length !== 6}
+              >
+                {isProcessing ? (
+                  <><Spinner as="span" animation="border" size="sm" className="me-2" /> Memproses...</>
+                ) : "Konfirmasi Check-In"}
+              </button>
+            </>
+          ) : (
+            // Hasil
+            <div className="text-center py-2">
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                style={{
+                  width: 72, height: 72,
+                  backgroundColor: result.success ? "#4CAF50" : "#F44336",
+                }}
+              >
+                {result.success
+                  ? <FiCheck size={36} color="white" />
+                  : <FiX size={36} color="white" />
+                }
               </div>
-            </div>
-            <button className="btn btn-outline-secondary w-100 mt-3" onClick={handleReset}>
-              Batal
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* ── Step 3: Hasil scan ──────────────────────────────────── */}
-      {scanResult && (
-        <div className="card border-0 shadow-sm" style={{ maxWidth: 500 }}>
-          <div className="card-body p-4 text-center">
-            {scanResult.success ? (
-              <>
-                <div
-                  className="rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto mb-3"
-                  style={{ width: 72, height: 72 }}
-                >
-                  <FiCheck size={36} color="white" />
-                </div>
-                <h5 className="fw-bold text-success mb-2">Check-in Berhasil!</h5>
+              <h5 className={`fw-bold mb-2 ${result.success ? "text-success" : "text-danger"}`}>
+                {result.success ? "Check-In Berhasil!" : "Check-In Gagal"}
+              </h5>
+
+              {result.success && result.data && (
                 <div className="card bg-light border-0 mt-3 text-start">
                   <div className="card-body p-3">
-                    <p className="mb-1"><strong>User:</strong> {scanResult.booking?.user_name}</p>
-                    <p className="mb-1"><strong>Email:</strong> {scanResult.booking?.user_email}</p>
-                    <p className="mb-1"><strong>Layanan:</strong> {scanResult.booking?.service_type_name} - {scanResult.booking?.service_name_name}</p>
-                    <p className="mb-1"><strong>Ruangan:</strong> {scanResult.booking?.room_name}</p>
-                    <p className="mb-0"><strong>Jadwal:</strong> {scanResult.booking?.sched_date} {scanResult.booking?.sched_start} - {scanResult.booking?.sched_end}</p>
+                    <p className="mb-1"><strong>Member:</strong> {result.data.user_name}</p>
+                    <p className="mb-1"><strong>Email:</strong> {result.data.user_email}</p>
+                    <p className="mb-1"><strong>Layanan:</strong> {result.data.service_type_name} — {result.data.service_name_name}</p>
+                    <p className="mb-1"><strong>Ruangan:</strong> {result.data.room_name}</p>
+                    <p className="mb-0"><strong>Jadwal:</strong> {result.data.sched_date} {result.data.sched_start}–{result.data.sched_end}</p>
                   </div>
                 </div>
-              </>
-            ) : (
-              <>
-                <div
-                  className="rounded-circle bg-danger d-flex align-items-center justify-content-center mx-auto mb-3"
-                  style={{ width: 72, height: 72 }}
-                >
-                  <FiX size={36} color="white" />
-                </div>
-                <h5 className="fw-bold text-danger mb-2">Check-in Gagal</h5>
-                <p className="text-muted">{scanResult.message}</p>
-              </>
-            )}
-            <button className="btn btn-primary w-100 mt-3" onClick={handleReset}>
-              Scan Berikutnya
-            </button>
-          </div>
+              )}
+
+              {!result.success && (
+                <p className="text-muted mt-2">{result.message}</p>
+              )}
+
+              <button className="btn btn-primary w-100 mt-4" onClick={handleReset}>
+                Check-In Berikutnya
+              </button>
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
     </div>
   );
 }
