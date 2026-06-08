@@ -73,13 +73,20 @@ const defaultForm = (date = ""): FormState => ({
   staff_ids: [],
 });
 
+// Perbaikan: Format tanggal menggunakan waktu lokal (Local Time)
 const formatDate = (date: Date | null) => {
   if (!date) return "";
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
+// Perbaikan: Parse tanggal menggunakan waktu lokal murni agar tidak bergeser 1 hari
 const parseDate = (dateStr: string) => {
-  return dateStr ? new Date(dateStr) : null;
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 };
 
 
@@ -230,7 +237,6 @@ export default function SchedulePage() {
     setModal((prev) => {
       const updated = { ...prev.form, [name]: value };
 
-   
       if (name === "start_time" || name === "end_time") {
         updated.duration_minutes = calcDuration(
           name === "start_time" ? value : updated.start_time,
@@ -272,7 +278,6 @@ export default function SchedulePage() {
 
   const handleSave = async () => {
     const { form, mode, editId } = modal;
-
 
     if (!form.date) {
       setModal((p) => ({ ...p, error: "Tanggal wajib dipilih" }));
@@ -322,7 +327,6 @@ export default function SchedulePage() {
           : await scheduleAPI.update(editId!, payload);
 
       if (!res.success && res.clashes && res.clashes.length > 0) {
-  
         setModal((p) => ({ ...p, clashes: res.clashes!, isLoading: false }));
         return;
       }
@@ -464,13 +468,13 @@ export default function SchedulePage() {
           <p className="fw-semibold small text-muted text-uppercase mb-2" style={{ letterSpacing: "0.5px" }}>
             Pilih Tanggal
           </p>
-         <DatePicker
-  selected={parseDate(filterDate)}
-  onChange={(date: Date | null) => setFilterDate(formatDate(date))}
-  className="form-control"
-  placeholderText="Pilih tanggal"
-  dateFormat="yyyy-MM-dd"
-/>
+          <DatePicker
+            selected={parseDate(filterDate)}
+            onChange={(date: Date | null) => setFilterDate(formatDate(date))}
+            className="form-control"
+            placeholderText="Pilih tanggal"
+            dateFormat="yyyy-MM-dd"
+          />
         </div>
       )}
 
@@ -501,7 +505,6 @@ export default function SchedulePage() {
             </div>
           </div>
 
-
           {scheduleError && (
             <div className="alert alert-danger py-2 small">{scheduleError}</div>
           )}
@@ -521,20 +524,18 @@ export default function SchedulePage() {
                 <div className="col-md-6 col-lg-4" key={sch.id}>
                   <div className="card border-0 shadow-sm border-start border-primary border-4 h-100">
                     <div className="card-body">
-                      {/* Waktu & durasi */}
                       <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
-  <span className="badge bg-primary">
-    {sch.start_time} – {sch.end_time} {sch.timezone}
-  </span>
-  <span className="badge bg-light text-secondary border" style={{ fontSize: 11 }}>
-    {sch.duration_minutes} menit
-  </span>
- <span className="badge bg-success" style={{ fontSize: 11 }}>
-  {sch.room_name.capacity} orang
-</span>
-</div>
+                        <span className="badge bg-primary">
+                          {sch.start_time} – {sch.end_time} {sch.timezone}
+                        </span>
+                        <span className="badge bg-light text-secondary border" style={{ fontSize: 11 }}>
+                          {sch.duration_minutes} menit
+                        </span>
+                        <span className="badge bg-success" style={{ fontSize: 11 }}>
+                          {sch.room_name.capacity} orang
+                        </span>
+                      </div>
 
-                      {/* Room */}
                       <p className="mb-1 small">
                         <span className="text-muted">Ruangan: </span>
                         <span className="fw-semibold text-capitalize">
@@ -543,7 +544,6 @@ export default function SchedulePage() {
                         <span className="text-muted"> ({sch.room_type.name})</span>
                       </p>
 
-                      {/* Staff */}
                       <p className="mb-2 small">
                         <span className="text-muted">Staff: </span>
                         {sch.staffs.length > 0 ? (
@@ -598,8 +598,6 @@ export default function SchedulePage() {
               </div>
 
               <div className="modal-body px-4">
-
-
                 {modal.clashes.length > 0 && (
                   <div className="alert alert-danger">
                     <div className="d-flex align-items-center gap-2 mb-2">
@@ -617,29 +615,27 @@ export default function SchedulePage() {
                   </div>
                 )}
 
-
                 {modal.error && (
                   <div className="alert alert-danger py-2 small">{modal.error}</div>
                 )}
-
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-3">
                     <label className="form-label small fw-semibold">Tanggal <span className="text-danger">*</span></label>
                     <DatePicker
-  selected={parseDate(modal.form.date)}
-  onChange={(date: Date | null) =>
-    setModal((prev) => ({
-      ...prev,
-      form: { ...prev.form, date: formatDate(date) },
-    }))
-  }
-  className="form-control"
-  minDate={new Date()}
-  placeholderText="Pilih tanggal"
-  dateFormat="yyyy-MM-dd"
-  disabled={modal.isLoading}
-/>
+                      selected={parseDate(modal.form.date)}
+                      onChange={(date: Date | null) =>
+                        setModal((prev) => ({
+                          ...prev,
+                          form: { ...prev.form, date: formatDate(date) },
+                        }))
+                      }
+                      className="form-control"
+                      minDate={new Date()}
+                      placeholderText="Pilih tanggal"
+                      dateFormat="yyyy-MM-dd"
+                      disabled={modal.isLoading}
+                    />
                   </div>
                   <div className="col-md-5">
                     <label className="form-label small fw-semibold">Waktu Mulai – Selesai <span className="text-danger">*</span></label>
@@ -692,7 +688,6 @@ export default function SchedulePage() {
 
                 <hr />
 
-
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label small fw-semibold">Room Type <span className="text-danger">*</span></label>
@@ -721,7 +716,7 @@ export default function SchedulePage() {
                       <option value="">-- Pilih Room --</option>
                       {filteredRoomNames(modal.form.room_type_id).map((rn) => (
                         <option key={rn.id} value={rn.id}>
-                          {rn.name} (kapasitas :  {rn.capacity} orang)
+                          {rn.name} (kapasitas : {rn.capacity} orang)
                         </option>
                       ))}
                     </select>
@@ -807,7 +802,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-
       {deleteModal.isOpen && (
         <div className="modal d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 400 }}>
@@ -848,7 +842,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-
       {copyModal.isOpen && (
         <div className="modal d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 480 }}>
@@ -866,14 +859,12 @@ export default function SchedulePage() {
               </div>
 
               <div className="modal-body px-4">
-
                 {copyModal.successMsg && (
                   <div className="alert alert-success py-2 small">
                     ✅ {copyModal.successMsg}
                   </div>
                 )}
 
-                {/* Error bentrok */}
                 {copyModal.clashes.length > 0 && (
                   <div className="alert alert-danger">
                     <div className="d-flex align-items-center gap-2 mb-2">
@@ -898,7 +889,6 @@ export default function SchedulePage() {
                   </div>
                 )}
 
-                {/* Error umum */}
                 {copyModal.error && (
                   <div className="alert alert-danger py-2 small">{copyModal.error}</div>
                 )}
@@ -915,21 +905,21 @@ export default function SchedulePage() {
                         Tanggal Tujuan <span className="text-danger">*</span>
                       </label>
                       <DatePicker
-  selected={parseDate(copyModal.targetDate)}
-  onChange={(date: Date | null) =>
-    setCopyModal((p) => ({
-      ...p,
-      targetDate: formatDate(date),
-      clashes: [],
-      error: "",
-    }))
-  }
-  className="form-control"
-  minDate={new Date()}
-  placeholderText="Pilih tanggal"
-  dateFormat="yyyy-MM-dd"
-  disabled={copyModal.isLoading}
-/>
+                        selected={parseDate(copyModal.targetDate)}
+                        onChange={(date: Date | null) =>
+                          setCopyModal((p) => ({
+                            ...p,
+                            targetDate: formatDate(date),
+                            clashes: [],
+                            error: "",
+                          }))
+                        }
+                        className="form-control"
+                        minDate={new Date()}
+                        placeholderText="Pilih tanggal"
+                        dateFormat="yyyy-MM-dd"
+                        disabled={copyModal.isLoading}
+                      />
                     </div>
                   </>
                 )}
